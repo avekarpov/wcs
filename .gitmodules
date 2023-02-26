@@ -1,0 +1,3 @@
+[submodule "wcs/libs/spdlog"]
+	path = wcs/libs/spdlog
+	url = git@github.com:gabime/spdlog.git
