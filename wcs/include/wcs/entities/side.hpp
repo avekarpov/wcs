@@ -9,7 +9,7 @@ namespace wcs
 enum class Side
 {
     Buy = 0,
-    Sell
+    Sell,
 };
 
 template <Side S, class Value_t>

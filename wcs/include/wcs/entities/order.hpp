@@ -1,8 +1,9 @@
 #ifndef WCS_ORDER_HPP
 #define WCS_ORDER_HPP
 
-#include "price.hpp"
 #include "amount.hpp"
+#include "id.hpp"
+#include "price.hpp"
 
 namespace wcs
 {
@@ -13,7 +14,17 @@ enum class OrderType
     Limit
 };
 
-template <Side S, OrderType Type>
+enum class OrderStatus
+{
+    New = 0,
+    Placed,
+    Partially,
+    Filled,
+    Canceled,
+    Rejected
+};
+
+template <Side S, OrderType OT>
 class Order;
 
 template <Side S>
@@ -54,6 +65,42 @@ private:
     
 private:
     Price<S> _price;
+    
+};
+
+template <class Order_t>
+class OrderHandler : public Order_t
+{
+public:
+    template <class ... Args>
+    OrderHandler (OrderId id, Args &&...args)
+    :
+        Order_t { std::forward<Args>(args)... },
+        _id { id },
+        _status { OrderStatus::New }
+    {
+    
+    }
+    
+    const OrderId &id() const
+    {
+        return _id;
+    }
+    
+    const OrderStatus &status() const
+    {
+        return _status;
+    }
+    
+    void updateStatus(OrderStatus status)
+    {
+        _status = status;
+    }
+    
+private:
+    OrderId _id;
+    
+    OrderStatus _status;
     
 };
 
