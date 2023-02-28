@@ -12,44 +12,55 @@ enum class Side
     Sell,
 };
 
-template <Side S, class Value_t>
-class WithSide
+template <template <Side> class Value_t>
+struct SidePair
 {
-public:
-    WithSide() = default;
-    
-    explicit WithSide(const Value_t &value) : _value { value } { }
-    
-    WithSide(WithSide &&with_side) : _value { std::move(with_side._value) } { }
-    
-    WithSide &operator=(const Value_t &value)
+    template <Side S>
+    explicit operator Side()
     {
-        _value = value;
-        
-        return *this;
-    }
-    
-    WithSide &operator=(const WithSide &with_side)
-    {
-        if (this != &with_side) {
-            _value = with_side._value;
+        if constexpr (S == Side::Buy) {
+            return buy;
         }
-        
-        return *this;
+        else if constexpr (S == Side::Sell) {
+            return sell;
+        }
+        else {
+            static_assert(S == Side::Buy || S == Side::Sell);
+        }
     }
     
-    WithSide &operator=(const WithSide &&with_side)
+    template <Side S>
+    Value_t<S> &get()
     {
-        _value = std::move(with_side._value);
+        if constexpr (S == Side::Buy) {
+            return buy;
+        }
+        else if constexpr (S == Side::Sell) {
+            return sell;
+        }
+        else {
+            static_assert(S == Side::Buy || S == Side::Sell);
+        }
     }
     
-    operator Value_t() const
+    template <Side S>
+    const Value_t<S> &get() const
     {
-        return _value;
+        if constexpr (S == Side::Buy) {
+            return buy;
+        }
+        else if constexpr (S == Side::Sell) {
+            return sell;
+        }
+        else {
+            static_assert(S == Side::Buy || S == Side::Sell);
+        }
     }
     
-protected:
-    Value_t _value;
+private:
+    Value_t<Side::Buy> buy;
+    Value_t<Side::Sell> sell;
+    
 };
 
 } // namespace wcs
