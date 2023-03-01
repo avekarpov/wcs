@@ -38,6 +38,11 @@ private:
             return _list;
         }
     
+        OrderHandler<Order_t> &get(OrderId id)
+        {
+            return *_index.find(id)->second;
+        }
+        
         template <class ... Args>
         void add(OrderId id, Args &&...args)
         {
@@ -172,6 +177,58 @@ public:
             _consumer.lock()->process(events::OrderUpdate<OrderStatus::Canceled>
             {
                 event.client_order_id
+            });
+        },
+        _order_table.find(event.client_order_id)->second);
+    }
+    
+    void process(const events::FillOrder &event)
+    {
+        if (auto it = _order_table.find(event.client_order_id); it == _order_table.end()) {
+            throw WCS_EXCEPTION(std::runtime_error, "Invalid order id");
+        }
+        
+        std::visit([&]<Side S, OrderType OT>(OrderSideType<S, OT>)
+        {
+            OrderHandler<Order<S, OT>> &order = [&]() -> OrderHandler<Order<S, OT>> &
+            {
+                if constexpr (OT == OrderType::Market) {
+                    return _market_orders.template get<S>().get(event.client_order_id);
+                }
+                else if constexpr (OT == OrderType::Limit) {
+                    return _limit_orders.template get<S>().get(event.client_order_id);
+                }
+                else {
+                    static_assert(OT == OrderType::Market || OT == OrderType::Limit);
+                }
+            }();
+    
+            assert(order.filledAmount() + event.amount <= order.amount());
+    
+            order.fill(event.amount);
+            
+            if (order.filledAmount() == order.amount()) {
+                if constexpr (OT == OrderType::Market) {
+                    _market_orders.template get<S>().remove(event.client_order_id);
+                }
+                else {
+                    _limit_orders.template get<S>().remove(event.client_order_id);
+                }
+                
+                _consumer.lock()->process(events::OrderUpdate<OrderStatus::Filled>
+                {
+                    event.client_order_id
+                });
+                
+                return;
+            }
+            
+            order.updateStatus(OrderStatus::Partially);
+            
+            _consumer.lock()->process(events::OrderUpdate<OrderStatus::Partially>
+            {
+                event.client_order_id,
+                order.filledAmount()
             });
         },
         _order_table.find(event.client_order_id)->second);

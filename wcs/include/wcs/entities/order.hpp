@@ -101,11 +101,21 @@ public:
         _status = status;
     }
     
+    const Amount &filledAmount() const
+    {
+        return _filled_amount;
+    }
+    
+    void fill(const Amount &amount)
+    {
+        _filled_amount += amount;
+    }
+    
 private:
     OrderId _id;
     
     OrderStatus _status;
-    
+    Amount _filled_amount;
 };
 
 } // namespace wcs
