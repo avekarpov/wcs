@@ -46,6 +46,54 @@ public:
         return !operator<(other);
     }
 
+    inline Amount operator+(const Amount<S> &other) const
+    {
+        return Amount<S> { _value + other._value };
+    }
+    
+    inline Amount operator-(const Amount<S> &other) const
+    {
+        return Amount<S> { _value - other._value };
+    }
+    
+    inline Amount &operator+=(const Amount<S> &other)
+    {
+        _value += other._value;
+        
+        return *this;
+    }
+    
+    inline Amount &operator-=(const Amount<S> &other)
+    {
+        _value -= other._value;
+    
+        return *this;
+    }
+    
+    inline Amount operator*(const Amount<S> &other) const
+    {
+        return Amount<S> { _value * other._value };
+    }
+    
+    inline Amount operator/(const Amount<S> &other) const
+    {
+        return Amount<S> { _value / other._value };
+    }
+    
+    inline Amount &operator*=(const Amount<S> &other)
+    {
+        _value *= other._value;
+        
+        return *this;
+    }
+    
+    inline Amount &operator/=(const Amount<S> &other)
+    {
+        _value /= other._value;
+        
+        return *this;
+    }
+    
 private:
     static constexpr auto EPS = std::numeric_limits<double>::epsilon();
     

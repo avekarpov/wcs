@@ -15,28 +15,18 @@ enum class Side
 template <template <Side> class Value_t>
 struct SidePair
 {
-    template <Side S>
-    explicit operator Side()
-    {
-        if constexpr (S == Side::Buy) {
-            return buy;
-        }
-        else if constexpr (S == Side::Sell) {
-            return sell;
-        }
-        else {
-            static_assert(S == Side::Buy || S == Side::Sell);
-        }
-    }
+    SidePair() = default;
+    
+    SidePair(const Value_t<Side::Buy> &buy, const Value_t<Side::Sell> &sell) : _buy { buy }, _sell { sell } { }
     
     template <Side S>
     Value_t<S> &get()
     {
         if constexpr (S == Side::Buy) {
-            return buy;
+            return _buy;
         }
         else if constexpr (S == Side::Sell) {
-            return sell;
+            return _sell;
         }
         else {
             static_assert(S == Side::Buy || S == Side::Sell);
@@ -47,10 +37,10 @@ struct SidePair
     const Value_t<S> &get() const
     {
         if constexpr (S == Side::Buy) {
-            return buy;
+            return _buy;
         }
         else if constexpr (S == Side::Sell) {
-            return sell;
+            return _sell;
         }
         else {
             static_assert(S == Side::Buy || S == Side::Sell);
@@ -58,8 +48,8 @@ struct SidePair
     }
     
 private:
-    Value_t<Side::Buy> buy;
-    Value_t<Side::Sell> sell;
+    Value_t<Side::Buy> _buy;
+    Value_t<Side::Sell> _sell;
     
 };
 
