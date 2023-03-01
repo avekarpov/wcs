@@ -8,7 +8,7 @@
 
 #include "events/cancel_order.hpp"
 #include "events/fill_order.hpp"
-#include "events/order_status.hpp"
+#include "events/order_update.hpp"
 #include "events/place_order.hpp"
 #include "utilits/exception.hpp"
 #include "utilits/side_comparison.hpp"
@@ -16,6 +16,7 @@
 namespace wcs
 {
 
+template <class Consumer>
 class OrderController
 {
 private:
@@ -105,7 +106,10 @@ private:
     };
     
     template <Side S, OrderType OT>
-    struct OrderSideType {};
+    struct OrderSideType
+    {
+    
+    };
     
 public:
     template <Side S>
@@ -115,6 +119,11 @@ public:
     using LimitOrderList = typename LimitOrders<S>::SharedOrderList;
     
 public:
+    void setConsumer(std::shared_ptr<Consumer> consumer)
+    {
+        _consumer = consumer;
+    }
+    
     template <Side S, OrderType OT>
     void process(const events::PlaceOrder<S, OT> &event)
     {
@@ -125,10 +134,10 @@ public:
         }
         
         if constexpr (OT == OrderType::Market) {
-            _market_orders.get<S>().add(event.client_order_id, event.amount);
+            _market_orders.template get<S>().add(event.client_order_id, event.amount);
         }
         else if constexpr (OT == OrderType::Limit) {
-            _limit_orders.get<S>().add(event.client_order_id, event.amount, event.price);
+            _limit_orders.template get<S>().add(event.client_order_id, event.amount, event.price);
         }
         else {
             static_assert(OT == OrderType::Market || OT == OrderType::Limit);
@@ -136,37 +145,51 @@ public:
     
         _order_table.emplace(event.client_order_id, OrderSideType<S, OT>{ });
         
-        // TODO: process OrderStatus on consumer
+        _consumer.lock()->process(events::OrderUpdate<S, OrderStatus::New>
+        {
+            event.client_order_id
+        });
     }
     
     void process(const events::CancelOrder &event)
     {
-        std::visit([this, &event]<Side S, OrderType OT>(OrderSideType<S, OT>)
+        if (auto it = _order_table.find(event.client_order_id); it == _order_table.end()) {
+            throw WCS_EXCEPTION(std::runtime_error, "Invalid order id");
+        }
+        
+        std::visit([&]<Side S, OrderType OT>(OrderSideType<S, OT>)
         {
             if constexpr (OT == OrderType::Market) {
-                _market_orders.get<S>().remove(event.client_order_id);
+                _market_orders.template get<S>().remove(event.client_order_id);
             }
             else if constexpr (OT == OrderType::Limit) {
-                _limit_orders.get<S>().remove(event.client_order_id);
+                _limit_orders.template get<S>().remove(event.client_order_id);
             }
             else {
                 static_assert(OT == OrderType::Market || OT == OrderType::Limit);
             }
+    
+            _consumer.lock()->process(events::OrderUpdate<S, OrderStatus::Canceled>
+            {
+                event.client_order_id
+            });
         },
         _order_table.find(event.client_order_id)->second);
     }
     
     SidePair<MarketOrderList> marketOrders() const
     {
-        return { _market_orders.get<Side::Buy>().get(), _market_orders.get<Side::Sell>().get() };
+        return { _market_orders.template get<Side::Buy>().get(), _market_orders.template get<Side::Sell>().get() };
     }
 
     SidePair<LimitOrderList> limitOrders() const
     {
-        return { _limit_orders.get<Side::Buy>().get(), _limit_orders.get<Side::Sell>().get() };
+        return { _limit_orders.template get<Side::Buy>().get(), _limit_orders.template get<Side::Sell>().get() };
     }
     
 private:
+    std::weak_ptr<Consumer> _consumer;
+    
     std::map<
         OrderId,
         std::variant<

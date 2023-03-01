@@ -1,5 +1,5 @@
-#ifndef WCS_ORDER_STATUS_HPP
-#define WCS_ORDER_STATUS_HPP
+#ifndef WCS_ORDER_UPDATE_HPP
+#define WCS_ORDER_UPDATE_HPP
 
 #include "../entities/order.hpp"
 #include "event.hpp"
@@ -33,4 +33,4 @@ struct OrderUpdate<S, OrderStatus::Rejected> : public OrderUpdate<S, OrderStatus
 
 } // namespace wcs::events
 
-#endif //WCS_ORDER_STATUS_HPP
+#endif //WCS_ORDER_UPDATE_HPP
