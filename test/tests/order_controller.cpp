@@ -20,12 +20,11 @@ void MarketOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> 
         Ts { 1 },
         EventId { 1 },
         OrderId { 1 },
-        Amount<S> { 1 }
+        Amount { 1 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::New);
         REQUIRE(event.client_order_id == 1);
     },
@@ -36,12 +35,11 @@ void MarketOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> 
         Ts { 2 },
         EventId { 2 },
         OrderId { 2 },
-        Amount<S> { 2 }
+        Amount { 2 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::New);
         REQUIRE(event.client_order_id == 2);
     },
@@ -52,12 +50,11 @@ void MarketOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> 
         Ts { 3 },
         EventId { 3 },
         OrderId { 3 },
-        Amount<S> { 3 }
+        Amount { 3 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::New);
         REQUIRE(event.client_order_id == 3);
     },
@@ -65,15 +62,15 @@ void MarketOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> 
     
     auto orders_it = market_orders->begin();
     REQUIRE(orders_it->id() == 1);
-    REQUIRE(orders_it->amount() == Amount<S>{ 1 });
+    REQUIRE(orders_it->amount() == Amount{ 1 });
     
     ++orders_it;
     REQUIRE(orders_it->id() == 2);
-    REQUIRE(orders_it->amount() == Amount<S>{ 2 });
+    REQUIRE(orders_it->amount() == Amount{ 2 });
     
     ++orders_it;
     REQUIRE(orders_it->id() == 3);
-    REQUIRE(orders_it->amount() == Amount<S>{ 3 });
+    REQUIRE(orders_it->amount() == Amount{ 3 });
     
     REQUIRE(market_orders->size() == 3);
     
@@ -84,9 +81,8 @@ void MarketOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> 
         OrderId{ 1 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::Canceled);
         REQUIRE(event.client_order_id == 1);
     },
@@ -94,7 +90,7 @@ void MarketOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> 
     
     orders_it = market_orders->begin();
     REQUIRE(orders_it->id() == 2);
-    REQUIRE(orders_it->amount() == Amount<S>{ 2 });
+    REQUIRE(orders_it->amount() == Amount{ 2 });
     
     order_controller.process(events::CancelOrder
     {
@@ -103,9 +99,8 @@ void MarketOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> 
         OrderId{ 2 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::Canceled);
         REQUIRE(event.client_order_id == 2);
     },
@@ -113,7 +108,7 @@ void MarketOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> 
     
     orders_it = market_orders->begin();
     REQUIRE(orders_it->id() == 3);
-    REQUIRE(orders_it->amount() == Amount<S>{ 3 });
+    REQUIRE(orders_it->amount() == Amount{ 3 });
     
     order_controller.process(events::CancelOrder
     {
@@ -122,9 +117,8 @@ void MarketOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> 
         OrderId{ 3 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::Canceled);
         REQUIRE(event.client_order_id == 3);
     },
@@ -138,10 +132,10 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
 {
     const auto is_sorted_by_price = [](const auto &orders)
     {
-        Price<S> previous = orders->begin()->price();
+        Price previous = orders->begin()->price();
         for (auto it = ++orders->begin(); it != orders->end(); ++it)
         {
-            if (utilits::sideLess(previous, it->price())) {
+            if (utilits::sideLess<S>(previous, it->price())) {
                 return false;
             }
 
@@ -161,13 +155,12 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         Ts { 1 },
         EventId { 1 },
         OrderId { 1 },
-        Amount<S> { 1 },
-        Price<S> { 100 }
+        Amount { 1 },
+        Price { 100 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::New);
         REQUIRE(event.client_order_id == 1);
     },
@@ -180,13 +173,12 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         Ts { 2 },
         EventId { 2 },
         OrderId { 2 },
-        Amount<S> { 2 },
-        Price<S> { 50 }
+        Amount { 2 },
+        Price { 50 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::New);
         REQUIRE(event.client_order_id == 2);
     },
@@ -199,13 +191,12 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         Ts { 3 },
         EventId { 3 },
         OrderId { 3 },
-        Amount<S> { 3 },
-        Price<S> { 150 }
+        Amount { 3 },
+        Price { 150 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::New);
         REQUIRE(event.client_order_id == 3);
     },
@@ -218,13 +209,12 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         Ts { 4 },
         EventId { 4 },
         OrderId { 4 },
-        Amount<S> { 4 },
-        Price<S> { 75 }
+        Amount { 4 },
+        Price { 75 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::New);
         REQUIRE(event.client_order_id == 4);
     },
@@ -237,13 +227,12 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         Ts { 5 },
         EventId { 5 },
         OrderId { 5 },
-        Amount<S> { 5 },
-        Price<S> { 125 }
+        Amount { 5 },
+        Price { 125 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::New);
         REQUIRE(event.client_order_id == 5);
     },
@@ -256,13 +245,12 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         Ts { 6 },
         EventId { 6 },
         OrderId { 6 },
-        Amount<S> { 6 },
-        Price<S> { 100 }
+        Amount { 6 },
+        Price { 100 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::New);
         REQUIRE(event.client_order_id == 6);
     },
@@ -275,13 +263,12 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         Ts { 7 },
         EventId { 7 },
         OrderId { 7 },
-        Amount<S> { 7 },
-        Price<S> { 50 }
+        Amount { 7 },
+        Price { 50 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::New);
         REQUIRE(event.client_order_id == 7);
     },
@@ -294,13 +281,12 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         Ts { 8 },
         EventId { 8 },
         OrderId { 8 },
-        Amount<S> { 8 },
-        Price<S> { 150 }
+        Amount { 8 },
+        Price { 150 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::New);
         REQUIRE(event.client_order_id == 8);
     },
@@ -317,9 +303,8 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         OrderId { 1 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::Canceled);
         REQUIRE(event.client_order_id == 1);
     },
@@ -334,9 +319,8 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         OrderId { 2 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::Canceled);
         REQUIRE(event.client_order_id == 2);
     },
@@ -351,9 +335,8 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         OrderId { 3 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::Canceled);
         REQUIRE(event.client_order_id == 3);
     },
@@ -368,9 +351,8 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         OrderId { 4 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::Canceled);
         REQUIRE(event.client_order_id == 4);
     },
@@ -385,9 +367,8 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         OrderId { 5 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::Canceled);
         REQUIRE(event.client_order_id == 5);
     },
@@ -402,9 +383,8 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         OrderId { 6 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::Canceled);
         REQUIRE(event.client_order_id == 6);
     },
@@ -419,9 +399,8 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         OrderId { 7 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::Canceled);
         REQUIRE(event.client_order_id == 7);
     },
@@ -436,9 +415,8 @@ void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &
         OrderId { 8 }
     });
     
-    std::visit([]<Side A, OrderStatus OS>(const events::OrderUpdate<A, OS> &event)
+    std::visit([]<OrderStatus OS>(const events::OrderUpdate<OS> &event)
     {
-        REQUIRE(A == S);
         REQUIRE(OS == OrderStatus::Canceled);
         REQUIRE(event.client_order_id == 8);
     },

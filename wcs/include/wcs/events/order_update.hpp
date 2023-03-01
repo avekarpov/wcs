@@ -7,26 +7,26 @@
 namespace wcs::events
 {
 
-template <Side S, OrderStatus OS>
+template <OrderStatus OS>
 struct OrderUpdate
 {
     OrderId client_order_id;
 };
 
-template <Side S>
-struct OrderUpdate<S, OrderStatus::Partially> : public OrderUpdate<S, OrderStatus::New>
+template<>
+struct OrderUpdate<OrderStatus::Partially> : public OrderUpdate<OrderStatus::New>
 {
-    Amount<S> amount;
+    Amount amount;
 };
 
-template <Side S>
-struct OrderUpdate<S, OrderStatus::Filled> : public  OrderUpdate<S, OrderStatus::Partially>
+template<>
+struct OrderUpdate<OrderStatus::Filled> : public  OrderUpdate<OrderStatus::Partially>
 {
 
 };
 
-template <Side S>
-struct OrderUpdate<S, OrderStatus::Rejected> : public OrderUpdate<S, OrderStatus::New>
+template<>
+struct OrderUpdate<OrderStatus::Rejected> : public OrderUpdate<OrderStatus::New>
 {
     // TODO: add reason
 };

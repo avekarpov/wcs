@@ -6,7 +6,6 @@
 namespace wcs
 {
 
-template <Side S>
 class Amount
 {
 public:
@@ -14,80 +13,80 @@ public:
     
     explicit Amount(double value) : _value { value } { }
     
-    Amount(const Amount<S> &amount) : _value { amount._value } { }
+    Amount(const Amount &amount) : _value { amount._value } { }
     
-    inline bool operator==(const Amount<S> &other) const
+    inline bool operator==(const Amount &other) const
     {
         return std::fabs(_value - other._value) <= EPS;
     }
     
-    inline bool operator!=(const Amount<S> &other) const
+    inline bool operator!=(const Amount &other) const
     {
         return std::fabs(_value - other._value) > EPS;
     }
     
-    inline bool operator<(const Amount<S> &other) const
+    inline bool operator<(const Amount &other) const
     {
         return _value + EPS < other._value;
     }
     
-    inline bool operator>(const Amount<S> &other) const
+    inline bool operator>(const Amount &other) const
     {
         return _value - EPS > other._value;
     }
     
-    inline bool operator<=(const Amount<S> &other) const
+    inline bool operator<=(const Amount &other) const
     {
         return !operator>(other);
     }
     
-    inline bool operator>=(const Amount<S> &other) const
+    inline bool operator>=(const Amount &other) const
     {
         return !operator<(other);
     }
 
-    inline Amount operator+(const Amount<S> &other) const
+    inline Amount operator+(const Amount &other) const
     {
-        return Amount<S> { _value + other._value };
+        return Amount { _value + other._value };
     }
     
-    inline Amount operator-(const Amount<S> &other) const
+    inline Amount operator-(const Amount &other) const
     {
-        return Amount<S> { _value - other._value };
+        return Amount { _value - other._value };
     }
     
-    inline Amount &operator+=(const Amount<S> &other)
+    inline Amount &operator+=(const Amount &other)
     {
         _value += other._value;
         
         return *this;
     }
     
-    inline Amount &operator-=(const Amount<S> &other)
+    inline Amount &operator-=(const Amount &other)
     {
         _value -= other._value;
     
         return *this;
     }
     
-    inline Amount operator*(const Amount<S> &other) const
+    inline Amount operator*(const Amount &other) const
     {
-        return Amount<S> { _value * other._value };
+        return Amount { _value * other._value };
     }
     
-    inline Amount operator/(const Amount<S> &other) const
+    inline Amount operator/(const Amount &other) const
     {
-        return Amount<S> { _value / other._value };
+        return Amount { _value / other._value };
     }
     
-    inline Amount &operator*=(const Amount<S> &other)
+    inline Amount &operator*=(const Amount &other)
     {
         _value *= other._value;
         
         return *this;
     }
     
-    inline Amount &operator/=(const Amount<S> &other)
+    inline Amount &operator/=(const Amount &other)
     {
         _value /= other._value;
         

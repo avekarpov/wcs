@@ -42,25 +42,15 @@ private:
 public:
     Order () = default;
     
-    Order (Amount<S> amount) : _amount { amount } { }
+    Order (Amount amount) : _amount { amount } { }
     
-    const Amount<S> &amount() const
+    const Amount &amount() const
     {
         return _amount;
     }
-    
-    void updateAmount(const Amount<S> &amount)
-    {
-        _amount = amount;
-    }
-    
-    void increaseAmount(const Amount<S> amount)
-    {
-        _amount += amount;
-    }
 
 private:
-    Amount<S> _amount;
+    Amount _amount;
 
 };
 
@@ -68,17 +58,17 @@ template <Side S>
 class Order<S, OrderType::Limit> : public MarketOrder<S>
 {
 public:
-    Order (Amount<S> amount) = delete;
+    Order (Amount amount) = delete;
     
-    Order(Amount<S> amount, Price<S> price) : MarketOrder<S> { amount }, _price { price } { }
+    Order(Amount amount, Price price) : MarketOrder<S> { amount }, _price { price } { }
 
-    const Price<S> &price() const
+    const Price &price() const
     {
         return _price;
     }
     
 private:
-    Price<S> _price;
+    Price _price;
     
 };
 

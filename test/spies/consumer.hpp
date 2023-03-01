@@ -12,8 +12,8 @@ namespace wcs
 class Consumer
 {
 public:
-    template <Side S, OrderStatus OS>
-    void process(const events::OrderUpdate<S, OS> &event)
+    template <OrderStatus OS>
+    void process(const events::OrderUpdate<OS> &event)
     {
         _order_updates.push_back(event);
     }
@@ -26,18 +26,12 @@ public:
 private:
     std::vector<
         std::variant<
-            events::OrderUpdate<Side::Buy, OrderStatus::New>,
-            events::OrderUpdate<Side::Sell, OrderStatus::New>,
-            events::OrderUpdate<Side::Buy, OrderStatus::Placed>,
-            events::OrderUpdate<Side::Sell, OrderStatus::Placed>,
-            events::OrderUpdate<Side::Buy, OrderStatus::Partially>,
-            events::OrderUpdate<Side::Sell, OrderStatus::Partially>,
-            events::OrderUpdate<Side::Buy, OrderStatus::Filled>,
-            events::OrderUpdate<Side::Sell, OrderStatus::Filled>,
-            events::OrderUpdate<Side::Buy, OrderStatus::Canceled>,
-            events::OrderUpdate<Side::Sell, OrderStatus::Canceled>,
-            events::OrderUpdate<Side::Buy, OrderStatus::Rejected>,
-            events::OrderUpdate<Side::Sell, OrderStatus::Rejected>>> _order_updates;
+            events::OrderUpdate<OrderStatus::New>,
+            events::OrderUpdate<OrderStatus::Placed>,
+            events::OrderUpdate<OrderStatus::Partially>,
+            events::OrderUpdate<OrderStatus::Filled>,
+            events::OrderUpdate<OrderStatus::Canceled>,
+            events::OrderUpdate<OrderStatus::Rejected>>> _order_updates;
 };
 
 } // namespace wcs

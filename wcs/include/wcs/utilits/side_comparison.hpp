@@ -7,8 +7,8 @@
 namespace wcs::utilits
 {
 
-template <Side S, template <Side> class Value_t>
-inline bool sideLess(const Value_t<S> &lhs, const Value_t<S> &rhs)
+template <Side S, class Value_t>
+inline bool sideLess(const Value_t &lhs, const Value_t &rhs)
 {
     if constexpr (S == Side::Buy) {
         return lhs < rhs;
@@ -21,8 +21,8 @@ inline bool sideLess(const Value_t<S> &lhs, const Value_t<S> &rhs)
     }
 }
 
-template <Side S, template <Side> class Value_t>
-inline bool sideLessEqual(const Value_t<S> &lhs, const Value_t<S> &rhs)
+template <Side S, class Value_t>
+inline bool sideLessEqual(const Value_t &lhs, const Value_t &rhs)
 {
     if constexpr (S == Side::Buy) {
         return lhs <= rhs;

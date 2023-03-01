@@ -9,21 +9,21 @@ TEST_CASE("SideComparison")
 {
     SECTION("Buy")
     {
-        CHECK(utilits::sideLess(Price<Side::Buy> { 1.1 }, Price<Side::Buy> { 1.2 }));
-        CHECK_FALSE(utilits::sideLess(Price<Side::Buy> { 1.2 }, Price<Side::Buy> { 1.1 }));
+        CHECK(utilits::sideLess<Side::Buy>(Price { 1.1 }, Price { 1.2 }));
+        CHECK_FALSE(utilits::sideLess<Side::Buy>(Price { 1.2 }, Price { 1.1 }));
     
-        CHECK(utilits::sideLessEqual(Price<Side::Buy> { 1.1 }, Price<Side::Buy> { 1.1 }));
-        CHECK(utilits::sideLessEqual(Price<Side::Buy> { 1.1 }, Price<Side::Buy> { 1.2 }));
-        CHECK_FALSE(utilits::sideLess(Price<Side::Buy> { 1.2 }, Price<Side::Buy> { 1.1 }));
+        CHECK(utilits::sideLessEqual<Side::Buy>(Price { 1.1 }, Price { 1.1 }));
+        CHECK(utilits::sideLessEqual<Side::Buy>(Price { 1.1 }, Price { 1.2 }));
+        CHECK_FALSE(utilits::sideLess<Side::Buy>(Price { 1.2 }, Price { 1.1 }));
     }
     
     SECTION("Sell")
     {
-        CHECK(utilits::sideLess(Price<Side::Sell> { 1.2 }, Price<Side::Sell> { 1.1 }));
-        CHECK_FALSE(utilits::sideLess(Price<Side::Sell> { 1.1 }, Price<Side::Sell> { 1.2 }));
+        CHECK(utilits::sideLess<Side::Sell>(Price { 1.2 }, Price { 1.1 }));
+        CHECK_FALSE(utilits::sideLess<Side::Sell>(Price { 1.1 }, Price { 1.2 }));
     
-        CHECK(utilits::sideLessEqual(Price<Side::Sell> { 1.1 }, Price<Side::Sell> { 1.1 }));
-        CHECK(utilits::sideLessEqual(Price<Side::Sell> { 1.2 }, Price<Side::Sell> { 1.1 }));
-        CHECK_FALSE(utilits::sideLess(Price<Side::Sell> { 1.1 }, Price<Side::Sell> { 1.2 }));
+        CHECK(utilits::sideLessEqual<Side::Sell>(Price { 1.1 }, Price { 1.1 }));
+        CHECK(utilits::sideLessEqual<Side::Sell>(Price { 1.2 }, Price { 1.1 }));
+        CHECK_FALSE(utilits::sideLess<Side::Sell>(Price { 1.1 }, Price { 1.2 }));
     }
 }

@@ -9,12 +9,11 @@
 namespace wcs::events
 {
 
-template <Side S>
 struct FillOrder : public Event
 {
     OrderId client_order_id;
     
-    Amount<S> amount;
+    Amount amount;
 };
 
 } // namespace wcs::events

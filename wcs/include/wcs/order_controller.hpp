@@ -65,7 +65,7 @@ private:
         friend Base;
 
     private:
-        void addImpl(OrderId id, Amount<S> amount)
+        void addImpl(OrderId id, Amount amount)
         {
             _list->emplace_back(id, amount);
             _index.emplace(id, --_list->end());
@@ -85,10 +85,10 @@ private:
         friend Base;
         
     private:
-        void addImpl(OrderId id, Amount<S> amount, Price<S> price)
+        void addImpl(OrderId id, Amount amount, Price price)
         {
             for (auto it = _list->begin(); it != _list->end(); ++it) {
-                if (utilits::sideLess(it->price(), price)) {
+                if (utilits::sideLess<S>(it->price(), price)) {
                     _index.emplace(id, _list->emplace(it, id, amount, price));
                     
                     return;
@@ -145,7 +145,7 @@ public:
     
         _order_table.emplace(event.client_order_id, OrderSideType<S, OT>{ });
         
-        _consumer.lock()->process(events::OrderUpdate<S, OrderStatus::New>
+        _consumer.lock()->process(events::OrderUpdate<OrderStatus::New>
         {
             event.client_order_id
         });
@@ -169,7 +169,7 @@ public:
                 static_assert(OT == OrderType::Market || OT == OrderType::Limit);
             }
     
-            _consumer.lock()->process(events::OrderUpdate<S, OrderStatus::Canceled>
+            _consumer.lock()->process(events::OrderUpdate<OrderStatus::Canceled>
             {
                 event.client_order_id
             });

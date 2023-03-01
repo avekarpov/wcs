@@ -15,13 +15,13 @@ struct PlaceOrder<S, OrderType::Market> : public Event
 {
     OrderId client_order_id;
     
-    Amount<S> amount;
+    Amount amount;
 };
 
 template <Side S>
 struct PlaceOrder<S, OrderType::Limit> : public PlaceOrder<S, OrderType::Market>
 {
-    Price<S> price;
+    Price price;
 };
 
 } // namespace wcs::events

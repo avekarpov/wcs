@@ -6,7 +6,6 @@
 namespace wcs
 {
 
-template <Side S>
 class Price
 {
 public:
@@ -14,80 +13,80 @@ public:
     
     explicit Price(double value) : _value { value } { }
     
-    Price(const Price<S> &amount) : _value { amount._value } { }
+    Price(const Price &amount) : _value { amount._value } { }
     
-    inline bool operator==(const Price<S> &other) const
+    inline bool operator==(const Price &other) const
     {
         return std::fabs(_value - other._value) <= EPS;
     }
     
-    inline bool operator!=(const Price<S> &other) const
+    inline bool operator!=(const Price &other) const
     {
         return std::fabs(_value - other._value) > EPS;
     }
     
-    inline bool operator<(const Price<S> &other) const
+    inline bool operator<(const Price &other) const
     {
         return _value + EPS < other._value;
     }
     
-    inline bool operator>(const Price<S> &other) const
+    inline bool operator>(const Price &other) const
     {
         return _value - EPS > other._value;
     }
     
-    inline bool operator<=(const Price<S> &other) const
+    inline bool operator<=(const Price &other) const
     {
         return !operator>(other);
     }
     
-    inline bool operator>=(const Price<S> &other) const
+    inline bool operator>=(const Price &other) const
     {
         return !operator<(other);
     }
     
-    inline Price operator+(const Price<S> &other) const
+    inline Price operator+(const Price &other) const
     {
-        return Price<S> { _value + other._value };
+        return Price { _value + other._value };
     }
     
-    inline Price operator-(const Price<S> &other) const
+    inline Price operator-(const Price &other) const
     {
-        return Price<S> { _value - other._value };
+        return Price { _value - other._value };
     }
     
-    inline Price &operator+=(const Price<S> &other)
+    inline Price &operator+=(const Price &other)
     {
         _value += other._value;
         
         return *this;
     }
     
-    inline Price &operator-=(const Price<S> &other)
+    inline Price &operator-=(const Price &other)
     {
         _value -= other._value;
         
         return *this;
     }
     
-    inline Price operator*(const Price<S> &other) const
+    inline Price operator*(const Price &other) const
     {
-        return Price<S> { _value * other._value };
+        return Price { _value * other._value };
     }
     
-    inline Price operator/(const Price<S> &other) const
+    inline Price operator/(const Price &other) const
     {
-        return Price<S> { _value / other._value };
+        return Price { _value / other._value };
     }
     
-    inline Price &operator*=(const Price<S> &other)
+    inline Price &operator*=(const Price &other)
     {
         _value *= other._value;
         
         return *this;
     }
     
-    inline Price &operator/=(const Price<S> &other)
+    inline Price &operator/=(const Price &other)
     {
         _value /= other._value;
         
