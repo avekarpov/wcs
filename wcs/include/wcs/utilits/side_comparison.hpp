@@ -3,7 +3,6 @@
 
 #include "../entities/side.hpp"
 
-// TODO: add doc
 namespace wcs::utilits
 {
 

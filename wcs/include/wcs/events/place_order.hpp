@@ -1,5 +1,5 @@
-#ifndef WCS_PLACEORDER_HPP
-#define WCS_PLACEORDER_HPP
+#ifndef WCS_PLACE_ORDER_HPP
+#define WCS_PLACE_ORDER_HPP
 
 #include "../entities/order.hpp"
 #include "event.hpp"
@@ -26,4 +26,4 @@ struct PlaceOrder<S, OrderType::Limit> : public PlaceOrder<S, OrderType::Market>
 
 } // namespace wcs::events
 
-#endif //WCS_PLACEORDER_HPP
+#endif //WCS_PLACE_ORDER_HPP
