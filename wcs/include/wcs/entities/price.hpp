@@ -1,6 +1,9 @@
 #ifndef WCS_PRICE_HPP
 #define WCS_PRICE_HPP
 
+#include <spdlog/fmt/fmt.h>
+
+#include "../utilits/exception.hpp"
 #include "side.hpp"
 
 namespace wcs
@@ -92,7 +95,12 @@ public:
         
         return *this;
     }
-
+    
+    explicit operator double() const
+    {
+        return _value;
+    }
+    
 private:
     static constexpr auto EPS = std::numeric_limits<double>::epsilon();
     
@@ -101,5 +109,28 @@ private:
 };
 
 } // namespace wcs
+
+template <>
+struct fmt::formatter<wcs::Price>
+{
+    constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
+    {
+        auto it = ctx.begin(), end = ctx.end();
+        
+        if (it != end && *it != '}') {
+            throw WCS_EXCEPTION(format_error, "Invalid format");
+        }
+        
+        return it;
+    }
+    
+    template <class FormatContext>
+    auto format(const wcs::Price &price, FormatContext& ctx) const -> decltype(ctx.out())
+    {
+        
+        return fmt::format_to(
+            ctx.out(), R"({})", static_cast<double>(price));
+    }
+};
 
 #endif //WCS_PRICE_HPP

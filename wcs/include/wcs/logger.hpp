@@ -71,6 +71,14 @@ public:
         
         return *this;
     }
+    
+    template <class Event>
+    const Logger &gotEvent(const Event &event)
+    {
+        trace(R"(Got event "{}" with [{}])", Event::Name, event);
+        
+        return *this;
+    }
 
 private:
     inline static constexpr auto PATTERN = "[%L] [%H:%M:%S %D] [%n]: %v";

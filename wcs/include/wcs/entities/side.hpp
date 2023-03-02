@@ -12,6 +12,16 @@ enum class Side
     Sell,
 };
 
+constexpr std::string_view toString(Side S)
+{
+    if (S == Side::Buy) {
+        return "Buy";
+    }
+    else {
+        return "Sell";
+    }
+}
+
 template <template <Side> class Value_t>
 struct SidePair
 {

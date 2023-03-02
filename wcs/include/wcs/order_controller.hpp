@@ -8,6 +8,7 @@
 #include "order_manager.hpp"
 #include "utilits/exception.hpp"
 #include "utilits/side_comparison.hpp"
+#include "logger.hpp"
 
 namespace wcs
 {
@@ -31,6 +32,8 @@ public:
     template <Side S, OrderType OT>
     void process(const events::PlaceOrder<S, OT> &event)
     {
+        _logger.gotEvent(event);
+        
         // TODO: check order params
         
         if constexpr (OT == OrderType::Market) {
@@ -45,6 +48,8 @@ public:
     
     void process(const events::CancelOrder &event)
     {
+        _logger.gotEvent(event);
+        
         _order_manager->remove(event.client_order_id);
     
         generateOrderUpdate<OrderStatus::Canceled>(event.client_order_id);
@@ -52,6 +57,8 @@ public:
     
     void process(const events::FillOrder &event)
     {
+        _logger.gotEvent(event);
+        
         auto &orderHandler = _order_manager->get(event.client_order_id);
     
         assert(orderHandler.filledAmount() + event.amount <= orderHandler.amount());
@@ -81,7 +88,8 @@ private:
 private:
     std::weak_ptr<Consumer> _consumer;
     std::shared_ptr<OrderManager> _order_manager;
-    
+  
+    inline static Logger _logger { "OrderController" };
 };
 
 } // namespace wcs
