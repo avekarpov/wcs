@@ -24,66 +24,64 @@ enum class OrderStatus
     Rejected
 };
 
-template <Side S, OrderType OT>
-class Order;
-
-template <Side S>
-using MarketOrder = Order<S, OrderType::Market>;
-
-template <Side S>
-using LimitOrder = Order<S, OrderType::Limit>;
-
-template <Side S>
-class Order<S, OrderType::Market>
+class Order
 {
-private:
-    friend LimitOrder<S>;
-    
 public:
-    Order () = default;
+    Order(Side side, OrderType type, const Amount &amount)
+    :
+        _side { side },
+        _type { type },
+        _amount { amount },
+        _price { }
+    {
+        assert(type == OrderType::Market);
+    }
     
-    Order (Amount amount) : _amount { amount } { }
+    Order(Side side, OrderType type, const Amount &amount, const Price &price)
+    :
+        _side { side },
+        _type { type },
+        _amount { amount },
+        _price { price }
+    {
+        assert(type == OrderType::Limit);
+    }
     
     const Amount &amount() const
     {
         return _amount;
     }
-
-private:
-    Amount _amount;
-
-};
-
-template <Side S>
-class Order<S, OrderType::Limit> : public MarketOrder<S>
-{
-public:
-    Order (Amount amount) = delete;
     
-    Order(Amount amount, Price price) : MarketOrder<S> { amount }, _price { price } { }
-
     const Price &price() const
     {
         return _price;
     }
     
-private:
+protected:
+    Side _side;
+    OrderType _type;
+    Amount _amount;
     Price _price;
     
 };
 
-template <class Order_t>
-class OrderHandler : public Order_t
+class OrderHandler final : public Order
 {
 public:
-    template <class ... Args>
-    OrderHandler (OrderId id, Args &&...args)
+    template <class ...Args>
+    explicit OrderHandler (OrderId id, Args &&...args)
     :
-        Order_t { std::forward<Args>(args)... },
+        Order { std::forward<Args>(args)... },
         _id { id },
-        _status { OrderStatus::New }
+        _status { OrderStatus::New },
+        _filled_amount { Amount{ 0 } }
     {
     
+    }
+    
+    const Order &order() const
+    {
+        return static_cast<const Order &>(*this);
     }
     
     const OrderId &id() const
@@ -111,11 +109,27 @@ public:
         _filled_amount += amount;
     }
     
+    const Amount &volumeBefore() const
+    {
+        assert(_type == OrderType::Limit);
+        
+        return _volume_before;
+    }
+    
+    void updateVolumeBefore(const Amount &volume)
+    {
+        assert(_type == OrderType::Limit);
+        
+        _volume_before = volume;
+    }
+
 private:
     OrderId _id;
     
     OrderStatus _status;
     Amount _filled_amount;
+    Amount _volume_before;
+    
 };
 
 } // namespace wcs

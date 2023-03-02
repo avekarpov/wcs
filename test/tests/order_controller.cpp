@@ -10,7 +10,8 @@ using namespace wcs;
 template <Side S>
 void MarketOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &order_controller)
 {
-    const auto market_orders = order_controller.marketOrders().get<S>();
+    const auto order_manager = order_controller.orderManager();
+    const auto market_orders = order_manager->marketOrders().get<S>();
     
     REQUIRE(market_orders);
     REQUIRE(market_orders->empty());
@@ -233,7 +234,8 @@ void MarketOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> 
 template <Side S>
 void LimitOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &order_controller)
 {
-    const auto limit_orders = order_controller.limitOrders().get<S>();
+    const auto order_manager = order_controller.orderManager();
+    const auto limit_orders = order_manager->limitOrders().get<S>();
     
     REQUIRE(limit_orders);
     REQUIRE(limit_orders->empty());

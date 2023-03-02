@@ -10,7 +10,7 @@ namespace wcs::events
 struct Event
 {
     Ts ts;
-    EventId event_id;
+    EventId id;
 };
 
 } // namespace wcs::events

@@ -12,6 +12,6 @@ struct CancelOrder : public Event
     OrderId client_order_id;
 };
 
-}
+} // namespace wcs::events
 
 #endif //WCS_CANCEL_ORDER_HPP
