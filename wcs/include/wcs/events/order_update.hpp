@@ -8,7 +8,7 @@ namespace wcs::events
 {
 
 template <OrderStatus OS>
-struct OrderUpdate
+struct OrderUpdate : public Event
 {
     OrderId client_order_id;
 };

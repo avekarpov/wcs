@@ -9,6 +9,11 @@ OrderHandler &UnsafeIndexedOrderList::get(wcs::OrderId id)
     return *_index.find(id)->second;
 }
 
+const OrderHandler &UnsafeIndexedOrderList::get(wcs::OrderId id) const
+{
+    return *_index.find(id)->second;
+}
+
 void UnsafeIndexedOrderList::remove(wcs::OrderId id)
 {
     auto it = _index.find(id);
@@ -17,12 +22,29 @@ void UnsafeIndexedOrderList::remove(wcs::OrderId id)
     _index.erase(it);
 }
 
-std::shared_ptr<const OrderList> UnsafeIndexedOrderList::list() const
+SharedOrderList UnsafeIndexedOrderList::list() const
 {
     return _list;
 }
 
 OrderHandler &OrderManager::get(wcs::OrderId id)
+{
+    auto it = _order_table.find(id);
+    
+    if (it == _order_table.end()) {
+        throw WCS_EXCEPTION(std::runtime_error, "Invalid order id");
+    }
+    
+    switch (it->second)
+    {
+        case OrderVariant::MarketBuy: return _market_orders.get<Side::Buy>().get(id);
+        case OrderVariant::MarketSell: return _market_orders.get<Side::Sell>().get(id);
+        case OrderVariant::LimitBuy: return _limit_orders.get<Side::Buy>().get(id);
+        case OrderVariant::LimitSell: return _limit_orders.get<Side::Sell>().get(id);
+    }
+}
+
+const OrderHandler &OrderManager::get(wcs::OrderId id) const
 {
     auto it = _order_table.find(id);
     

@@ -12,11 +12,8 @@ inline bool sideLess(const Value_t &lhs, const Value_t &rhs)
     if constexpr (S == Side::Buy) {
         return lhs < rhs;
     }
-    else if constexpr (S == Side::Sell) {
-        return lhs > rhs;
-    }
     else {
-        static_assert(S == Side::Buy || S == Side::Sell);
+        return lhs > rhs;
     }
 }
 
@@ -26,11 +23,8 @@ inline bool sideLessEqual(const Value_t &lhs, const Value_t &rhs)
     if constexpr (S == Side::Buy) {
         return lhs <= rhs;
     }
-    else if constexpr (S == Side::Sell) {
-        return lhs >= rhs;
-    }
     else {
-        static_assert(S == Side::Buy || S == Side::Sell);
+        return lhs >= rhs;
     }
 }
 

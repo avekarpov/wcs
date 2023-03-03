@@ -47,6 +47,16 @@ public:
         assert(type == OrderType::Limit);
     }
     
+    Side side() const
+    {
+        return _side;
+    }
+    
+    OrderType type() const
+    {
+        return _type;
+    }
+    
     const Amount &amount() const
     {
         return _amount;

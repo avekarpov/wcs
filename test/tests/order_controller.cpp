@@ -7,6 +7,8 @@
 
 using namespace wcs;
 
+using spies::Consumer;
+
 template <Side S>
 void MarketOrders(std::shared_ptr<Consumer> consumer, OrderController<Consumer> &order_controller)
 {

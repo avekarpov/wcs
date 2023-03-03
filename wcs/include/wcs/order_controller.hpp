@@ -81,6 +81,7 @@ private:
     {
         _consumer.lock()->process(events::OrderUpdate<OS>
         {
+            Ts { 0 }, EventId { 0 }, // TODO: change for event builder
             std::forward<Args>(args)...
         });
     }

@@ -6,7 +6,7 @@
 
 #include <wcs/events/order_update.hpp>
 
-namespace wcs
+namespace wcs::spies
 {
 
 class Consumer
@@ -34,6 +34,6 @@ private:
             events::OrderUpdate<OrderStatus::Rejected>>> _order_updates;
 };
 
-} // namespace wcs
+} // namespace wcs::spies
 
 #endif //WCS_CONSUMER_HPP

@@ -27,6 +27,8 @@ public:
     
     OrderHandler &get(OrderId id);
     
+    const OrderHandler &get(OrderId id) const;
+    
     void remove(OrderId id);
     
     std::shared_ptr<const OrderList> list() const;
@@ -128,6 +130,8 @@ public:
     }
     
     OrderHandler &get(OrderId id);
+    
+    const OrderHandler &get(OrderId id) const;
     
     void remove(OrderId id);
     
