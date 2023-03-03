@@ -4,6 +4,14 @@ project(wcs)
 set(CMAKE_CXX_STANDARD 20)
 
 set(WCS_BUILD_TESTS OFF CACHE BOOL "Build library test")
+set(WCS_ADDRESS_SANITIZER OFF CACHE BOOL "Build with address sanitizer")
+
+# Build with address sanitizer
+if(WCS_ADDRESS_SANITIZER)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static-libasan")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libasan")
+endif()
 
 # Add library
 add_subdirectory(wcs)
