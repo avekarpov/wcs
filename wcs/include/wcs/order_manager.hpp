@@ -23,25 +23,13 @@ private:
     using ListIndex = std::map<OrderId, Index>;
 
 public:
-    UnsafeIndexedOrderList() : _list { std::make_shared<OrderList>() } { }
+    UnsafeIndexedOrderList();
     
-    OrderHandler &get(OrderId id)
-    {
-        return *_index.find(id)->second;
-    }
+    OrderHandler &get(OrderId id);
     
-    void remove(OrderId id)
-    {
-        auto it = _index.find(id);
-        
-        _list->erase(it->second);
-        _index.erase(it);
-    }
+    void remove(OrderId id);
     
-    std::shared_ptr<const OrderList> list() const
-    {
-        return _list;
-    }
+    std::shared_ptr<const OrderList> list() const;
     
 protected:
     std::shared_ptr<OrderList> _list;
@@ -139,51 +127,13 @@ public:
         _order_table.emplace(id, toOrderVariant<S, OT>());
     }
     
-    OrderHandler &get(OrderId id)
-    {
-        auto it = _order_table.find(id);
+    OrderHandler &get(OrderId id);
     
-        if (it == _order_table.end()) {
-            throw WCS_EXCEPTION(std::runtime_error, "Invalid order id");
-        }
+    void remove(OrderId id);
     
-        switch (it->second)
-        {
-            case OrderVariant::MarketBuy: return _market_orders.get<Side::Buy>().get(id);
-            case OrderVariant::MarketSell: return _market_orders.get<Side::Sell>().get(id);
-            case OrderVariant::LimitBuy: return _limit_orders.get<Side::Buy>().get(id);
-            case OrderVariant::LimitSell: return _limit_orders.get<Side::Sell>().get(id);
-        }
-    }
+    SidePair<SideSharedOrderList> marketOrders() const;
     
-    void remove(OrderId id)
-    {
-        auto it = _order_table.find(id);
-    
-        if (it == _order_table.end()) {
-            throw WCS_EXCEPTION(std::runtime_error, "Invalid order id");
-        }
-    
-        switch (it->second)
-        {
-            case OrderVariant::MarketBuy: _market_orders.get<Side::Buy>().remove(id); break;
-            case OrderVariant::MarketSell: _market_orders.get<Side::Sell>().remove(id); break;
-            case OrderVariant::LimitBuy: _limit_orders.get<Side::Buy>().remove(id); break;
-            case OrderVariant::LimitSell: _limit_orders.get<Side::Sell>().remove(id); break;
-        }
-        
-        _order_table.erase(id);
-    }
-    
-    SidePair<SideSharedOrderList> marketOrders() const
-    {
-        return { _market_orders.get<Side::Buy>().list(), _market_orders.get<Side::Sell>().list() };
-    }
-    
-    SidePair<SideSharedOrderList> limitOrders() const
-    {
-        return { _limit_orders.get<Side::Buy>().list(), _limit_orders.get<Side::Sell>().list() };
-    }
+    SidePair<SideSharedOrderList> limitOrders() const;
     
 private:
     OrderTable _order_table;

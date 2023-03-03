@@ -16,7 +16,7 @@ public:
     
     explicit Amount(double value) : _value { value } { }
     
-    Amount(const Amount &amount) : _value { amount._value } { }
+    Amount(const Amount &amount) = default;
     
     inline bool operator==(const Amount &other) const
     {
@@ -113,7 +113,7 @@ private:
 template <>
 struct fmt::formatter<wcs::Amount>
 {
-    constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
+    static constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
     {
         auto it = ctx.begin(), end = ctx.end();
         
