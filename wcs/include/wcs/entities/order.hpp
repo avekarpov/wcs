@@ -14,6 +14,16 @@ enum class OrderType
     Limit
 };
 
+constexpr std::string_view toString(OrderType order_type)
+{
+    switch (order_type)
+    {
+        case OrderType::Market: return "Market";
+        case OrderType::Limit: return "Limit";
+        default: throw WCS_EXCEPTION(std::invalid_argument, "Out of enum class");
+    }
+}
+
 enum class OrderStatus
 {
     New = 0,
@@ -34,6 +44,7 @@ constexpr std::string_view toString(OrderStatus order_status)
         case OrderStatus::Filled: return "Filled";
         case OrderStatus::Canceled: return "Canceled";
         case OrderStatus::Rejected: return "Rejected";
+        default: throw WCS_EXCEPTION(std::invalid_argument, "Out of enum");
     }
 }
 

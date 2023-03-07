@@ -113,7 +113,7 @@ private:
 template <>
 struct fmt::formatter<wcs::Price>
 {
-    static constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
+    constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
     {
         auto it = ctx.begin(), end = ctx.end();
         
@@ -127,7 +127,6 @@ struct fmt::formatter<wcs::Price>
     template <class FormatContext>
     auto format(const wcs::Price &price, FormatContext& ctx) const -> decltype(ctx.out())
     {
-        
         return fmt::format_to(
             ctx.out(), R"({})", static_cast<double>(price));
     }

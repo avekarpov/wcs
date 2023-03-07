@@ -41,6 +41,8 @@ public:
     
     void processAndComplete(events::OrderbookUpdate &event)
     {
+        _logger.gotEvent(event);
+    
         moveOrdersByUpdate(event);
     
         _historical_depth = event.depth;

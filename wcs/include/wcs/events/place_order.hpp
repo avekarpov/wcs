@@ -15,7 +15,7 @@ struct PlaceOrder;
 template <Side S>
 struct PlaceOrder<S, OrderType::Market> : public Event
 {
-    static constexpr std::string_view Name = "PlaceOrder";
+    static constexpr std::string_view NAME = "PlaceOrder";
     
     OrderId client_order_id;
     
@@ -50,14 +50,18 @@ struct fmt::formatter<wcs::events::PlaceOrder<S, OT>>
         if constexpr (OT == wcs::OrderType::Market) {
             return fmt::format_to(
                 ctx.out(),
-                R"(ts: {}, id: {}, side: {}, type: market, client_order_id: {}, amount: {})",
-                event.ts.count(), event.id, toString(S), event.client_order_id, event.amount);
+                R"({{"event": "{}", "ts": {}, "id": {}, "side": "{}", "type": "{}", "client_order_id": {}, )"
+                R"("amount": {}}})",
+                wcs::events::PlaceOrder<S, OT>::NAME, event.ts.count(), event.id, wcs::toString(S), wcs::toString(OT),
+                event.client_order_id, event.amount);
         }
         else {
             return fmt::format_to(
                 ctx.out(),
-                R"(ts: {}, id: {}, side: {}, type: limit, client_order_id: {}, amount: {}, price: {})",
-                event.ts.count(), event.id, wcs::toString(S), event.client_order_id, event.amount, event.price);
+                R"({{"event": "{}", "ts": {}, "id": {}, "side": "{}", "type": "{}", "client_order_id": {}, )"
+                R"("amount": {}, "price": {}}})",
+                wcs::events::PlaceOrder<S, OT>::NAME, event.ts.count(), event.id, wcs::toString(S), wcs::toString(OT),
+                event.client_order_id, event.amount, event.price);
         }
     }
 };

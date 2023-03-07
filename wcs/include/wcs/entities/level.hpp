@@ -1,6 +1,8 @@
 #ifndef WCS_LEVEL_HPP
 #define WCS_LEVEL_HPP
 
+#include <spdlog/fmt/fmt.h>
+
 #include "amount.hpp"
 #include "price.hpp"
 #include "side.hpp"
@@ -51,5 +53,30 @@ template <Side S>
 using Depth = std::vector<Level<S>>;
 
 } // namespace wcs
+
+template <wcs::Side S>
+struct fmt::formatter<wcs::Level<S>>
+{
+    constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
+    {
+        auto it = ctx.begin(), end = ctx.end();
+        
+        if (it != end && *it != '}') {
+            throw WCS_EXCEPTION(format_error, "Invalid format");
+        }
+        
+        return it;
+    }
+    
+    template <class FormatContext>
+    auto format(const wcs::Level<S> &level, FormatContext& ctx) const -> decltype(ctx.out())
+    {
+        return fmt::format_to(
+            ctx.out(),
+            R"({{"side": "{}", "price": {}, "volume": {}}})",
+            wcs::toString(S), level.price(), level.volume()
+        );
+    }
+};
 
 #endif //WCS_LEVEL_HPP

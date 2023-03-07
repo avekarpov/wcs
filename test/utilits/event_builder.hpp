@@ -13,14 +13,14 @@ inline Ts getNextTs()
 {
     static Ts ts { 0 };
     
-    return ts;
+    return ts++;
 }
 
 inline EventId getNextEventId()
 {
     static EventId id {  };
     
-    return id;
+    return id++;
 }
 
 template <class Event, class ... Args>

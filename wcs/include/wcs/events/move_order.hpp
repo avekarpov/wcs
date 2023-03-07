@@ -12,7 +12,7 @@ namespace wcs::events
 
 struct MoveOrder : public Event
 {
-    static constexpr std::string_view Name = "MoveOrder";
+    static constexpr std::string_view NAME = "MoveOrder";
     
     OrderId client_order_id;
     
@@ -40,8 +40,8 @@ struct fmt::formatter<wcs::events::MoveOrder>
     {
         return fmt::format_to(
             ctx.out(),
-            R"(ts: {}, id: {}, client_order_id: {}, volume_before {})",
-            event.ts.count(), event.id, event.client_order_id, event.volume_before);
+            R"({{"event": "{}", "ts": {}, "id": {}, "client_order_id": {}, "volume_before": {}}})",
+            wcs::events::MoveOrder::NAME, event.ts.count(), event.id, event.client_order_id, event.volume_before);
     }
 };
 

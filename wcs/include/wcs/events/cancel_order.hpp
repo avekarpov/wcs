@@ -12,7 +12,7 @@ namespace wcs::events
 
 struct CancelOrder : public Event
 {
-    static constexpr std::string_view Name = "CancelOrder";
+    static constexpr std::string_view NAME = "CancelOrder";
     
     OrderId client_order_id;
 };
@@ -36,11 +36,10 @@ struct fmt::formatter<wcs::events::CancelOrder>
     template <class FormatContext>
     auto format(const wcs::events::CancelOrder &event, FormatContext& ctx) const -> decltype(ctx.out())
     {
-
         return fmt::format_to(
             ctx.out(),
-            R"(ts: {}, id: {}, client_order_id: {})",
-            event.ts.count(), event.id, event.client_order_id);
+            R"({{"event": "{}", "ts": {}, "id": {}, "client_order_id": {}}})",
+            wcs::events::CancelOrder::NAME, event.ts.count(), event.id, event.client_order_id);
     }
 };
 

@@ -94,8 +94,8 @@ TEST_CASE("Orderbook")
     {
         consumer->clear();
         
-        update.ts = Ts { 2 };
-        update.id = EventId { 2 };
+        update.ts = getNextTs();
+        update.id = getNextEventId();
         
         auto &buy = depth.get<Side::Buy>(); buy.clear();
         buy.push_back(Level<Side::Buy> { Price { 100 }, Amount { 10 } });
@@ -130,9 +130,9 @@ TEST_CASE("Orderbook")
     {
         consumer->clear();
         
-        update.ts = Ts { 2 };
-        update.id = EventId { 2 };
-    
+        update.ts = getNextTs();
+        update.id = getNextEventId();
+        
         auto &buy = depth.get<Side::Buy>(); buy.clear();
         buy.push_back(Level<Side::Buy> { Price { 100 }, Amount { 5 } });
         buy.push_back(Level<Side::Buy> { Price { 95 }, Amount { 5 } });

@@ -41,6 +41,7 @@ OrderHandler &OrderManager::get(wcs::OrderId id)
         case OrderVariant::MarketSell: return _market_orders.get<Side::Sell>().get(id);
         case OrderVariant::LimitBuy: return _limit_orders.get<Side::Buy>().get(id);
         case OrderVariant::LimitSell: return _limit_orders.get<Side::Sell>().get(id);
+        default: throw WCS_EXCEPTION(std::invalid_argument, "Out of enum");
     }
 }
 
@@ -58,6 +59,7 @@ const OrderHandler &OrderManager::get(wcs::OrderId id) const
         case OrderVariant::MarketSell: return _market_orders.get<Side::Sell>().get(id);
         case OrderVariant::LimitBuy: return _limit_orders.get<Side::Buy>().get(id);
         case OrderVariant::LimitSell: return _limit_orders.get<Side::Sell>().get(id);
+        default: throw WCS_EXCEPTION(std::invalid_argument, "Out of enum");
     }
 }
 
