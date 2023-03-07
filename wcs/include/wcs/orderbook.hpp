@@ -9,14 +9,22 @@
 #include "events/move_order.hpp"
 #include "events/order_update.hpp"
 #include "events/orderbook_update.hpp"
+#include "logger.hpp"
 #include "order_manager.hpp"
 #include "utilits/side_comparison.hpp"
 
 namespace wcs
 {
 
+class OrderbookLogger
+{
+protected:
+    inline static Logger _logger { "Orderbook" };
+    
+};
+
 template <class Consumer>
-class Orderbook
+class Orderbook : public OrderbookLogger
 {
 public:
     
@@ -33,7 +41,7 @@ public:
     
     void processAndComplete(events::OrderbookUpdate &event)
     {
-        // TODO: update all orders volume before
+        moveOrdersByUpdate(event);
     
         _historical_depth = event.depth;
         
@@ -44,6 +52,8 @@ public:
     
     void process(const events::OrderUpdate<OrderStatus::New> &event)
     {
+        _logger.gotEvent(event);
+    
         const auto &orderHandler = _order_manager.lock()->get(event.client_order_id);
         
         const std::optional<Amount> volume_before = orderHandler.side() == Side::Buy
@@ -54,6 +64,7 @@ public:
             generateOrderMove(event.client_order_id, volume_before.value());
         }
         else {
+            // TODO: maybe copy last depth level volume
             generateOrderMove(event.client_order_id, Amount { std::numeric_limits<double>::max() });
         }
     }
@@ -76,6 +87,43 @@ public:
     }
     
 private:
+    void moveOrdersByUpdate(const events::OrderbookUpdate &event)
+    {
+        moveSideOrdersByUpdate(event.depth.get<Side::Buy>());
+        moveSideOrdersByUpdate(event.depth.get<Side::Sell>());
+    }
+    
+    template <Side S>
+    void moveSideOrdersByUpdate(const Depth<S> &depth)
+    {
+        const auto strategy_orders = _order_manager.lock()->limitOrders().get<S>();
+    
+        auto new_level = depth.begin();
+        auto old_level = _historical_depth.get<S>().begin();
+        for (auto order = strategy_orders->begin(); order != strategy_orders->end(); ++order) {
+            if (!order->volumeBefore()) {
+                continue;
+            }
+            
+            if (utilits::sideLess<S>(order->price(), depth.back().price())) {
+                break;
+            }
+            
+            while (utilits::sideGreater<S>(new_level->price(), order->price())) {
+                ++new_level;
+            }
+            while (utilits::sideGreater<S>(old_level->price(), order->price())) {
+                ++old_level;
+            }
+            
+            if (new_level->volume() < old_level->volume()) {
+                auto order_new_volume_before = order->volumeBefore() * (new_level->volume() / old_level->volume());
+    
+                generateOrderMove(order->id(), order_new_volume_before);
+            }
+        }
+    }
+    
     void completeDepth()
     {
         completeSideDepth<Side::Buy>();

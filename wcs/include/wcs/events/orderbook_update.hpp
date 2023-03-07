@@ -9,6 +9,15 @@ namespace wcs::events
 
 struct OrderbookUpdate : public Event
 {
+    OrderbookUpdate &operator=(const OrderbookUpdate &other)
+    {
+        ts = other.ts;
+        id = other.id;
+        depth = other.depth;
+        
+        return *this;
+    }
+    
     SidePair<Depth> &depth;
     
 };

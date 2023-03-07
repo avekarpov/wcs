@@ -101,6 +101,11 @@ public:
         return _value;
     }
     
+    explicit operator bool() const
+    {
+        return static_cast<bool>(_value);
+    }
+    
 private:
     static constexpr auto EPS = std::numeric_limits<double>::epsilon();
     

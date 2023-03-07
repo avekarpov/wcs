@@ -57,7 +57,7 @@ struct fmt::formatter<wcs::events::PlaceOrder<S, OT>>
             return fmt::format_to(
                 ctx.out(),
                 R"(ts: {}, id: {}, side: {}, type: limit, client_order_id: {}, amount: {}, price: {})",
-                event.ts.count(), event.id, toString(S), event.client_order_id, event.amount, event.price);
+                event.ts.count(), event.id, wcs::toString(S), event.client_order_id, event.amount, event.price);
         }
     }
 };

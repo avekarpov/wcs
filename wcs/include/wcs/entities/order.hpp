@@ -24,6 +24,19 @@ enum class OrderStatus
     Rejected
 };
 
+constexpr std::string_view toString(OrderStatus order_status)
+{
+    switch (order_status)
+    {
+        case OrderStatus::New: return "New";
+        case OrderStatus::Placed: return "Placed";
+        case OrderStatus::Partially: return "Partially";
+        case OrderStatus::Filled: return "Filled";
+        case OrderStatus::Canceled: return "Canceled";
+        case OrderStatus::Rejected: return "Rejected";
+    }
+}
+
 class Order
 {
 public:
