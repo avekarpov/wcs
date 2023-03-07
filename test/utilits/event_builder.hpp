@@ -9,14 +9,14 @@
 namespace wcs
 {
 
-Ts getNextTs()
+inline Ts getNextTs()
 {
     static Ts ts { 0 };
     
     return ts;
 }
 
-EventId getNextEventId()
+inline EventId getNextEventId()
 {
     static EventId id {  };
     
