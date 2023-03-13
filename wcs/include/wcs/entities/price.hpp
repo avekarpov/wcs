@@ -16,7 +16,7 @@ public:
     
     explicit Price(double value) : _value { value } { }
     
-    Price(const Price &amount) : _value { amount._value } { }
+    Price(const Price &amount) = default;
     
     inline bool operator==(const Price &other) const
     {
@@ -127,7 +127,6 @@ struct fmt::formatter<wcs::Price>
     template <class FormatContext>
     auto format(const wcs::Price &price, FormatContext& ctx) const -> decltype(ctx.out())
     {
-        
         return fmt::format_to(
             ctx.out(), R"({})", static_cast<double>(price));
     }

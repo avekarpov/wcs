@@ -14,7 +14,7 @@ namespace wcs::events
 
 struct FillOrder : public Event
 {
-    static constexpr std::string_view Name = "FillOrder";
+    static constexpr std::string_view NAME = "FillOrder";
     
     OrderId client_order_id;
     
@@ -40,11 +40,10 @@ struct fmt::formatter<wcs::events::FillOrder>
     template <class FormatContext>
     auto format(const wcs::events::FillOrder &event, FormatContext& ctx) const -> decltype(ctx.out())
     {
-        
         return fmt::format_to(
             ctx.out(),
-            R"(ts: {}, id: {}, client_order_id: {}, amount: {})",
-            event.ts.count(), event.id, event.client_order_id, event.amount);
+            R"({{"event": "{}", "ts": {}, "id": {}, "client_order_id": {}, "amount": {}}})",
+            wcs::events::FillOrder::NAME, event.ts.count(), event.id, event.client_order_id, event.amount);
     }
 };
 

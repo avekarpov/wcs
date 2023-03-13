@@ -14,6 +14,16 @@ enum class OrderType
     Limit
 };
 
+constexpr std::string_view toString(OrderType order_type)
+{
+    switch (order_type)
+    {
+        case OrderType::Market: return "Market";
+        case OrderType::Limit: return "Limit";
+        default: throw WCS_EXCEPTION(std::invalid_argument, "Out of enum class");
+    }
+}
+
 enum class OrderStatus
 {
     New = 0,
@@ -23,6 +33,20 @@ enum class OrderStatus
     Canceled,
     Rejected
 };
+
+constexpr std::string_view toString(OrderStatus order_status)
+{
+    switch (order_status)
+    {
+        case OrderStatus::New: return "New";
+        case OrderStatus::Placed: return "Placed";
+        case OrderStatus::Partially: return "Partially";
+        case OrderStatus::Filled: return "Filled";
+        case OrderStatus::Canceled: return "Canceled";
+        case OrderStatus::Rejected: return "Rejected";
+        default: throw WCS_EXCEPTION(std::invalid_argument, "Out of enum");
+    }
+}
 
 class Order
 {
@@ -45,6 +69,16 @@ public:
         _price { price }
     {
         assert(type == OrderType::Limit);
+    }
+    
+    Side side() const
+    {
+        return _side;
+    }
+    
+    OrderType type() const
+    {
+        return _type;
     }
     
     const Amount &amount() const

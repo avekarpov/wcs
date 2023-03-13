@@ -75,7 +75,7 @@ public:
     template <class Event>
     const Logger &gotEvent(const Event &event)
     {
-        trace(R"(Got event "{}" with [{}])", Event::Name, event);
+        trace(R"(Got event: {})", event);
         
         return *this;
     }

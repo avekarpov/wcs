@@ -16,7 +16,7 @@ public:
     
     explicit Amount(double value) : _value { value } { }
     
-    Amount(const Amount &amount) : _value { amount._value } { }
+    Amount(const Amount &amount) = default;
     
     inline bool operator==(const Amount &other) const
     {
@@ -101,6 +101,11 @@ public:
         return _value;
     }
     
+    explicit operator bool() const
+    {
+        return static_cast<bool>(_value);
+    }
+    
 private:
     static constexpr auto EPS = std::numeric_limits<double>::epsilon();
     
@@ -127,7 +132,6 @@ struct fmt::formatter<wcs::Amount>
     template <class FormatContext>
     auto format(const wcs::Amount &amount, FormatContext& ctx) const -> decltype(ctx.out())
     {
-        
         return fmt::format_to(
             ctx.out(), R"({})", static_cast<double>(amount));
     }

@@ -3,6 +3,7 @@
 
 #include "events/cancel_order.hpp"
 #include "events/fill_order.hpp"
+#include "events/move_order.hpp"
 #include "events/order_update.hpp"
 #include "events/place_order.hpp"
 #include "order_manager.hpp"
@@ -13,8 +14,15 @@
 namespace wcs
 {
 
+class OrderControllerLogger
+{
+protected:
+    inline static Logger _logger { "OrderController" };
+    
+};
+
 template <class Consumer>
-class OrderController
+class OrderController : public OrderControllerLogger
 {
 public:
     OrderController() : _order_manager { std::make_shared<OrderManager>() } { }
@@ -75,12 +83,30 @@ public:
         }
     }
     
+    void process(const events::MoveOrder &event)
+    {
+        _logger.gotEvent(event);
+    
+        auto &orderHandler = _order_manager->get(event.client_order_id);
+    
+        assert(orderHandler.status() == OrderStatus::New || event.volume_before < orderHandler.volumeBefore());
+        
+        orderHandler.updateVolumeBefore(event.volume_before);
+        
+        if (orderHandler.status() == OrderStatus::New) {
+            orderHandler.updateStatus(OrderStatus::Placed);
+    
+            generateOrderUpdate<OrderStatus::Placed>(event.client_order_id);
+        }
+    }
+    
 private:
     template <OrderStatus OS, class ...Args>
     void generateOrderUpdate(Args &&...args)
     {
         _consumer.lock()->process(events::OrderUpdate<OS>
         {
+            Ts { 0 }, EventId { 0 }, // TODO: change for event builder
             std::forward<Args>(args)...
         });
     }
@@ -88,8 +114,7 @@ private:
 private:
     std::weak_ptr<Consumer> _consumer;
     std::shared_ptr<OrderManager> _order_manager;
-  
-    inline static Logger _logger { "OrderController" };
+    
 };
 
 } // namespace wcs
