@@ -26,13 +26,49 @@ constexpr std::string_view toString(OrderType order_type)
 
 enum class OrderStatus
 {
-    New = 0,
+    New = 0, // internal status
     Placed,
     Partially,
     Filled,
     Canceled,
     Rejected
 };
+
+constexpr bool isExecution(OrderStatus order_status)
+{
+    switch (order_status)
+    {
+        case OrderStatus::New:
+        case OrderStatus::Filled:
+        case OrderStatus::Canceled:
+        case OrderStatus::Rejected:
+            return false;
+    
+        case OrderStatus::Placed:
+        case OrderStatus::Partially:
+            return true;
+            
+        default: throw WCS_EXCEPTION(std::invalid_argument, "Out of enum class");
+    }
+}
+
+constexpr bool isFinished(OrderStatus order_status)
+{
+    switch (order_status)
+    {
+        case OrderStatus::New:
+        case OrderStatus::Placed:
+        case OrderStatus::Partially:
+            return false;
+            
+        case OrderStatus::Filled:
+        case OrderStatus::Canceled:
+        case OrderStatus::Rejected:
+            return true;
+        
+        default: throw WCS_EXCEPTION(std::invalid_argument, "Out of enum class");
+    }
+}
 
 constexpr std::string_view toString(OrderStatus order_status)
 {
@@ -59,6 +95,10 @@ public:
         _price { }
     {
         assert(type == OrderType::Market);
+        
+        if ( amount <= Amount { 0 }) {
+            throw WCS_EXCEPTION(std::invalid_argument, "Invalid order amount");
+        }
     }
     
     Order(Side side, OrderType type, const Amount &amount, const Price &price)
@@ -69,6 +109,10 @@ public:
         _price { price }
     {
         assert(type == OrderType::Limit);
+    
+        if ( amount <= Amount { 0 }) {
+            throw WCS_EXCEPTION(std::invalid_argument, "Invalid order amount");
+        }
     }
     
     Side side() const
@@ -92,10 +136,10 @@ public:
     }
     
 protected:
-    Side _side;
-    OrderType _type;
-    Amount _amount;
-    Price _price;
+    const Side _side;
+    const OrderType _type;
+    const Amount _amount;
+    const Price _price;
     
 };
 
@@ -108,14 +152,11 @@ public:
         Order { std::forward<Args>(args)... },
         _id { id },
         _status { OrderStatus::New },
-        _filled_amount { Amount{ 0 } }
+        _filled_amount { 0 },
+        _volume_before { std::numeric_limits<double>::max() },
+        _is_freezed { false }
     {
     
-    }
-    
-    const Order &order() const
-    {
-        return static_cast<const Order &>(*this);
     }
     
     const OrderId &id() const
@@ -130,6 +171,20 @@ public:
     
     void updateStatus(OrderStatus status)
     {
+        assert(!_is_freezed);
+        assert(_status != OrderStatus::New || (status == OrderStatus::Placed));
+        assert(
+            _status != OrderStatus::Placed ||
+            (status == OrderStatus::Partially || status == OrderStatus::Filled || status == OrderStatus::Canceled)
+        );
+        assert(
+            _status != OrderStatus::Partially ||
+            (status == OrderStatus::Partially || status == OrderStatus::Filled || status == OrderStatus::Canceled)
+        );
+        assert(_status != OrderStatus::Filled);
+        assert(_status != OrderStatus::Canceled);
+        assert(_status != OrderStatus::Rejected);
+        
         _status = status;
     }
     
@@ -138,8 +193,19 @@ public:
         return _filled_amount;
     }
     
+    Amount restAmount() const
+    {
+        return _amount - _filled_amount;
+    }
+    
     void fill(const Amount &amount)
     {
+        assert(!_is_freezed);
+        assert(isExecution(_status));
+    
+        assert(amount > Amount { 0 });
+        assert(_filled_amount + amount <= _amount);
+        
         _filled_amount += amount;
     }
     
@@ -153,16 +219,42 @@ public:
     void updateVolumeBefore(const Amount &volume)
     {
         assert(_type == OrderType::Limit);
+    
+        assert(!_is_freezed);
+        assert(isExecution(_status) || _status == OrderStatus::New);
+    
+        assert(_volume_before >= volume);
         
         _volume_before = volume;
     }
 
+    bool isFreezed() const
+    {
+        return _is_freezed;
+    }
+    
+    void freeze()
+    {
+        assert(!_is_freezed);
+        
+        _is_freezed = true;
+    }
+    
+    void unfreeze()
+    {
+        assert(_is_freezed);
+        
+        _is_freezed = false;
+    }
+    
 private:
-    OrderId _id;
+    const OrderId _id;
     
     OrderStatus _status;
     Amount _filled_amount;
-    Amount _volume_before;
+    Amount _volume_before; // only historical volume before
+    
+    bool _is_freezed;
     
 };
 

@@ -43,10 +43,12 @@ template <Side S>
 class MarketUnsafeIndexedOrderList : public UnsafeIndexedOrderList
 {
 public:
-    void add(OrderId id, const Amount &amount)
+    OrderHandler &add(OrderId id, const Amount &amount)
     {
         _list->emplace_back(id, S, OrderType::Market, amount);
         _index.emplace(id, --_list->end());
+        
+        return _list->back();
     }
     
 };
@@ -55,18 +57,21 @@ template <Side S>
 class LimitUnsafeIndexedOrderList : public UnsafeIndexedOrderList
 {
 public:
-    void add(OrderId id, const Amount &amount, const Price &price)
+    OrderHandler &add(OrderId id, const Amount &amount, const Price &price)
     {
         for (auto it = _list->begin(); it != _list->end(); ++it) {
             if (utilits::sideLess<S>(it->price(), price)) {
-                _index.emplace(id, _list->emplace(it, id, S, OrderType::Limit, amount, price));
-            
-                return;
+                auto order = _list->emplace(it, id, S, OrderType::Limit, amount, price);
+                _index.emplace(id, order);
+                
+                return *order;
             }
         }
     
         _list->emplace_back(id, S, OrderType::Limit, amount, price);
         _index.emplace(id, --_list->end());
+        
+        return _list->back();
     }
     
 };
@@ -111,22 +116,29 @@ public:
     
 public:
     template <Side S, OrderType OT, class ...Args>
-    void add(OrderId id, Args &&...args)
+    OrderHandler &add(OrderId id, Args &&...args)
     {
         auto it = _order_table.find(id);
     
         if (it != _order_table.end()) {
             throw WCS_EXCEPTION(std::runtime_error, "Duplicate order id");
         }
-        
-        if constexpr (OT == OrderType::Market) {
-            _market_orders.get<S>().add(id, std::forward<Args>(args)...);
+    
+        // TODO: make more beautiful
+        auto &order = [&, ... args = std::forward<Args>(args)] () -> OrderHandler &
+        {
+            if constexpr (OT == OrderType::Market) {
+                return _market_orders.get<S>().add(id, std::forward<Args>(args)...);
+            }
+            else {
+                return _limit_orders.get<S>().add(id, std::forward<Args>(args)...);
+            }
         }
-        else {
-            _limit_orders.get<S>().add(id, std::forward<Args>(args)...);
-        }
+        ();
         
         _order_table.emplace(id, toOrderVariant<S, OT>());
+        
+        return order;
     }
     
     OrderHandler &get(OrderId id);

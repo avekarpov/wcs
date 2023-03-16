@@ -2,7 +2,7 @@
 #define WCS_MOCKS_CONSUMER_HPP
 
 #include <wcs/order_controller.hpp>
-#include <wcs/orderbook.hpp>
+#include <wcs/order_book.hpp>
 
 namespace wcs::mocks
 {
@@ -18,20 +18,30 @@ public:
         _order_controller = order_controller;
     }
     
-    void setOrderbook(std::shared_ptr<Orderbook<C>> orderbook)
+    void setOrderBook(std::shared_ptr<OrderBook<C>> order_book)
     {
-        _orderbook = orderbook;
+        _order_book = order_book;
     }
     
     template <OrderStatus OS>
     void process(const events::OrderUpdate<OS> &event)
     {
         if constexpr (OS == OrderStatus::New) {
-            processToOrderbook(event);
+            processToOrderBook(event);
         }
     }
     
-    void process(const events::MoveOrder &event)
+    void process(const events::MoveOrderTo &event)
+    {
+        processToOrderController(event);
+    }
+    
+    void process(const events::FreezeOrder &event)
+    {
+        processToOrderController(event);
+    }
+    
+    void process(const events::UnfreezeOrder &event)
     {
         processToOrderController(event);
     }
@@ -46,16 +56,16 @@ private:
     }
     
     template <class Event>
-    void processToOrderbook(const Event &event)
+    void processToOrderBook(const Event &event)
     {
-        if (_orderbook.lock()) {
-            _orderbook.lock()->process(event);
+        if (_order_book.lock()) {
+            _order_book.lock()->process(event);
         }
     }
     
 private:
     std::weak_ptr<OrderController<C>> _order_controller;
-    std::weak_ptr<Orderbook<C>> _orderbook;
+    std::weak_ptr<OrderBook<C>> _order_book;
 
 };
 

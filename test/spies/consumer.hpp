@@ -14,39 +14,65 @@ class Consumer : public mocks::Consumer<Consumer>
     using Base = mocks::Consumer<Consumer>;
     
 public:
-    void process(const events::MoveOrder &event)
+    void process(const events::MoveOrderTo &event)
     {
-        _move_orders.push_back(event);
+        _move_order_events.push_back(event);
     
         Base::process(event);
     }
     
-    const auto &moveOrders() const
+    const auto &moveOrderEvents() const
     {
-        return _move_orders;
+        return _move_order_events;
     }
     
     template <OrderStatus OS>
     void process(const events::OrderUpdate<OS> &event)
     {
-        _order_updates.push_back(event);
+        _order_update_events.push_back(event);
     
         Base::process(event);
     }
     
-    const auto &orderUpdates() const
+    const auto &orderUpdateEvents() const
     {
-        return _order_updates;
+        return _order_update_events;
+    }
+    
+    void process(const events::FreezeOrder &event)
+    {
+        _freeze_order_events.push_back(event);
+    
+        Base::process(event);
+    }
+    
+    const auto &freezeOrderEvents() const
+    {
+        return _freeze_order_events;
+    }
+    
+    void process(const events::UnfreezeOrder &event)
+    {
+        _unfreeze_order_events.push_back(event);
+        
+        Base::process(event);
+    }
+    
+    const auto &unfreezeOrderEvents() const
+    {
+        return _unfreeze_order_events;
     }
     
     void clear()
     {
-        _move_orders.clear();
-        _order_updates.clear();
+        _move_order_events.clear();
+        _order_update_events.clear();
+        _freeze_order_events.clear();
+        _unfreeze_order_events.clear();
     }
     
 private:
-    std::vector<events::MoveOrder> _move_orders;
+    std::vector<events::MoveOrderTo> _move_order_events;
     
     std::vector<
         std::variant<
@@ -55,7 +81,11 @@ private:
             events::OrderUpdate<OrderStatus::Partially>,
             events::OrderUpdate<OrderStatus::Filled>,
             events::OrderUpdate<OrderStatus::Canceled>,
-            events::OrderUpdate<OrderStatus::Rejected>>> _order_updates;
+            events::OrderUpdate<OrderStatus::Rejected>>> _order_update_events;
+    
+    std::vector<events::FreezeOrder> _freeze_order_events;
+    std::vector<events::UnfreezeOrder> _unfreeze_order_events;
+    
 };
 
 } // namespace wcs::spies

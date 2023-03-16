@@ -1,6 +1,8 @@
 #ifndef WCS_LEVEL_HPP
 #define WCS_LEVEL_HPP
 
+#include <list>
+
 #include <spdlog/fmt/fmt.h>
 
 #include "amount.hpp"
@@ -40,7 +42,16 @@ public:
     
     void updateVolume(const Amount &volume)
     {
+        assert(volume >= Amount { 0 });
+        
         _volume = volume;
+    }
+    
+    void increaseVolume(const Amount &volume)
+    {
+        assert(volume >= Amount { 0 });
+        
+        _volume += volume;
     }
     
 private:
@@ -49,8 +60,9 @@ private:
     
 };
 
+// TODO: make non copyable
 template <Side S>
-using Depth = std::vector<Level<S>>;
+using Depth = std::list<Level<S>>;
 
 } // namespace wcs
 

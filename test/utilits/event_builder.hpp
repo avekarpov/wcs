@@ -11,14 +11,14 @@ namespace wcs
 
 inline Ts getNextTs()
 {
-    static Ts ts { 0 };
+    static Ts ts { 1 };
     
     return ts++;
 }
 
 inline EventId getNextEventId()
 {
-    static EventId id {  };
+    static EventId id { 1 };
     
     return id++;
 }

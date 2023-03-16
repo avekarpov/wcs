@@ -14,7 +14,12 @@ class Price
 public:
     Price() = default;
     
-    explicit Price(double value) : _value { value } { }
+    explicit Price(double value) : _value { value }
+    {
+        if (value < -EPS) {
+            throw WCS_EXCEPTION(std::invalid_argument, "Price less zero");
+        }
+    }
     
     Price(const Price &amount) = default;
     

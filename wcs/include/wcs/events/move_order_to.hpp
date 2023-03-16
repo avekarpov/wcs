@@ -1,5 +1,5 @@
-#ifndef WCS_MOVE_ORDER_HPP
-#define WCS_MOVE_ORDER_HPP
+#ifndef WCS_MOVE_ORDER_TO_HPP
+#define WCS_MOVE_ORDER_TO_HPP
 
 #include <spdlog/fmt/fmt.h>
 
@@ -10,9 +10,9 @@
 namespace wcs::events
 {
 
-struct MoveOrder : public Event
+struct MoveOrderTo : public Event
 {
-    static constexpr std::string_view NAME = "MoveOrder";
+    static constexpr std::string_view NAME = "MoveOrderTo";
     
     OrderId client_order_id;
     
@@ -22,7 +22,7 @@ struct MoveOrder : public Event
 } // namespace wcs::events
 
 template <>
-struct fmt::formatter<wcs::events::MoveOrder>
+struct fmt::formatter<wcs::events::MoveOrderTo>
 {
     constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
     {
@@ -36,13 +36,13 @@ struct fmt::formatter<wcs::events::MoveOrder>
     }
     
     template <class FormatContext>
-    auto format(const wcs::events::MoveOrder &event, FormatContext& ctx) const -> decltype(ctx.out())
+    auto format(const wcs::events::MoveOrderTo &event, FormatContext& ctx) const -> decltype(ctx.out())
     {
         return fmt::format_to(
             ctx.out(),
             R"({{"event": "{}", "ts": {}, "id": {}, "client_order_id": {}, "volume_before": {}}})",
-            wcs::events::MoveOrder::NAME, event.ts.count(), event.id, event.client_order_id, event.volume_before);
+            wcs::events::MoveOrderTo::NAME, event.ts.count(), event.id, event.client_order_id, event.volume_before);
     }
 };
 
-#endif //WCS_MOVE_ORDER_HPP
+#endif //WCS_MOVE_ORDER_TO_HPP

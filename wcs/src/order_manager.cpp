@@ -41,7 +41,7 @@ OrderHandler &OrderManager::get(wcs::OrderId id)
         case OrderVariant::MarketSell: return _market_orders.get<Side::Sell>().get(id);
         case OrderVariant::LimitBuy: return _limit_orders.get<Side::Buy>().get(id);
         case OrderVariant::LimitSell: return _limit_orders.get<Side::Sell>().get(id);
-        default: throw WCS_EXCEPTION(std::invalid_argument, "Out of enum");
+        default: throw WCS_EXCEPTION(std::logic_error, "Out of enum");
     }
 }
 
@@ -59,7 +59,7 @@ const OrderHandler &OrderManager::get(wcs::OrderId id) const
         case OrderVariant::MarketSell: return _market_orders.get<Side::Sell>().get(id);
         case OrderVariant::LimitBuy: return _limit_orders.get<Side::Buy>().get(id);
         case OrderVariant::LimitSell: return _limit_orders.get<Side::Sell>().get(id);
-        default: throw WCS_EXCEPTION(std::invalid_argument, "Out of enum");
+        default: throw WCS_EXCEPTION(std::logic_error, "Out of enum");
     }
 }
 
@@ -77,6 +77,7 @@ void OrderManager::remove(wcs::OrderId id)
         case OrderVariant::MarketSell: _market_orders.get<Side::Sell>().remove(id); break;
         case OrderVariant::LimitBuy: _limit_orders.get<Side::Buy>().remove(id); break;
         case OrderVariant::LimitSell: _limit_orders.get<Side::Sell>().remove(id); break;
+        default: throw WCS_EXCEPTION(std::logic_error, "Out of enum");
     }
     
     _order_table.erase(id);
@@ -88,7 +89,6 @@ SidePair<wcs::OrderManager::SideSharedOrderList> OrderManager::marketOrders() co
 }
 
 SidePair<wcs::OrderManager::SideSharedOrderList> OrderManager::limitOrders() const
-
 {
     return { _limit_orders.get<Side::Buy>().list(), _limit_orders.get<Side::Sell>().list() };
 }

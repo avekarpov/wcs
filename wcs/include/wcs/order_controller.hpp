@@ -3,7 +3,8 @@
 
 #include "events/cancel_order.hpp"
 #include "events/fill_order.hpp"
-#include "events/move_order.hpp"
+#include "events/freeze_order.hpp"
+#include "events/move_order_to.hpp"
 #include "events/order_update.hpp"
 #include "events/place_order.hpp"
 #include "order_manager.hpp"
@@ -45,18 +46,25 @@ public:
         // TODO: check order params
         
         if constexpr (OT == OrderType::Market) {
-            _order_manager->add<S, OT>(event.client_order_id, event.amount);
+            auto &order = _order_manager->add<S, OT>(event.client_order_id, event.amount);
+            
+            // Market order is placed instantly
+            order.updateStatus(OrderStatus::Placed);
+            generateOrderUpdate<OrderStatus::Placed>(event.client_order_id);
         }
         else {
             _order_manager->add<S, OT>(event.client_order_id, event.amount, event.price);
+            
+            // Limit order is placed by order book
+            generateOrderUpdate<OrderStatus::New>(event.client_order_id);
         }
-    
-        generateOrderUpdate<OrderStatus::New>(event.client_order_id);
     }
     
     void process(const events::CancelOrder &event)
     {
         _logger.gotEvent(event);
+    
+        // TODO: check order params
         
         _order_manager->remove(event.client_order_id);
     
@@ -67,37 +75,47 @@ public:
     {
         _logger.gotEvent(event);
         
-        auto &orderHandler = _order_manager->get(event.client_order_id);
+        auto &order = _order_manager->get(event.client_order_id);
     
-        assert(orderHandler.filledAmount() + event.amount <= orderHandler.amount());
-    
-        orderHandler.fill(event.amount);
+        order.fill(event.amount);
         
-        if (orderHandler.filledAmount() == orderHandler.amount()) {
+        if (!order.restAmount()) {
             _order_manager->remove(event.client_order_id);
     
             generateOrderUpdate<OrderStatus::Filled>(event.client_order_id);
         }
         else {
-            generateOrderUpdate<OrderStatus::Partially>(event.client_order_id, orderHandler.filledAmount());
+            generateOrderUpdate<OrderStatus::Partially>(event.client_order_id, order.filledAmount());
         }
     }
     
-    void process(const events::MoveOrder &event)
+    void process(const events::MoveOrderTo &event)
     {
         _logger.gotEvent(event);
     
-        auto &orderHandler = _order_manager->get(event.client_order_id);
+        auto &order = _order_manager->get(event.client_order_id);
     
-        assert(orderHandler.status() == OrderStatus::New || event.volume_before < orderHandler.volumeBefore());
+        order.updateVolumeBefore(event.volume_before);
         
-        orderHandler.updateVolumeBefore(event.volume_before);
-        
-        if (orderHandler.status() == OrderStatus::New) {
-            orderHandler.updateStatus(OrderStatus::Placed);
-    
+        if (order.status() == OrderStatus::New) {
+            order.updateStatus(OrderStatus::Placed);
+            
             generateOrderUpdate<OrderStatus::Placed>(event.client_order_id);
         }
+    }
+    
+    void process(const events::FreezeOrder &event)
+    {
+        _logger.gotEvent(event);
+    
+        _order_manager->get(event.client_order_id).freeze();
+    }
+    
+    void process(const events::UnfreezeOrder &event)
+    {
+        _logger.gotEvent(event);
+        
+        _order_manager->get(event.client_order_id).unfreeze();
     }
     
 private:

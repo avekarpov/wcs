@@ -1,5 +1,5 @@
-#ifndef WCS_ORDERBOOK_UPDATE_HPP
-#define WCS_ORDERBOOK_UPDATE_HPP
+#ifndef WCS_ORDER_BOOK_UPDATE_HPP
+#define WCS_ORDER_BOOK_UPDATE_HPP
 
 #include <spdlog/fmt/fmt.h>
 
@@ -9,27 +9,28 @@
 namespace wcs::events
 {
 
-struct OrderbookUpdate : public Event
+struct OrderBookUpdate : public Event
 {
-    static constexpr std::string_view NAME = "OrderbookUpdate";
+    static constexpr std::string_view NAME = "OrderBookUpdate";
     
-    OrderbookUpdate &operator=(const OrderbookUpdate &other)
+    OrderBookUpdate &operator=(const OrderBookUpdate &other)
     {
-        ts = other.ts;
-        id = other.id;
-        depth = other.depth;
-        
+        if (this != &other) {
+            ts = other.ts;
+            id = other.id;
+            depth = other.depth;
+        }
+
         return *this;
     }
     
     SidePair<Depth> &depth;
-    
 };
 
 } // namespace wcs::events
 
 template <>
-struct fmt::formatter<wcs::events::OrderbookUpdate>
+struct fmt::formatter<wcs::events::OrderBookUpdate>
 {
     constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
     {
@@ -43,16 +44,16 @@ struct fmt::formatter<wcs::events::OrderbookUpdate>
     }
     
     template <class FormatContext>
-    auto format(const wcs::events::OrderbookUpdate &event, FormatContext& ctx) const -> decltype(ctx.out())
+    auto format(const wcs::events::OrderBookUpdate &event, FormatContext& ctx) const -> decltype(ctx.out())
     {
         return fmt::format_to(
             ctx.out(),
             R"({{"event": "{}", "ts": {}, "id": {}, "depth": {{"buy": [{}], "sell": [{}]}}}})",
-            wcs::events::OrderbookUpdate::NAME, event.ts.count(), event.id,
+            wcs::events::OrderBookUpdate::NAME, event.ts.count(), event.id,
             fmt::join(event.depth.get<wcs::Side::Buy>(), ", "),
             fmt::join(event.depth.get<wcs::Side::Sell>(), ", ")
         );
     }
 };
 
-#endif //WCS_ORDERBOOK_UPDATE_HPP
+#endif //WCS_ORDER_BOOK_UPDATE_HPP

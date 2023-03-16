@@ -72,14 +72,24 @@ public:
         return *this;
     }
     
-    inline Amount operator*(const Amount &other) const
+    inline double operator*(const Amount &other) const
     {
-        return Amount { _value * other._value };
+        return _value * other._value;
     }
     
-    inline Amount operator/(const Amount &other) const
+    inline double operator/(const Amount &other) const
     {
-        return Amount { _value / other._value };
+        return _value / other._value;
+    }
+    
+    inline Amount operator*(double by) const
+    {
+        return Amount { _value * by };
+    }
+    
+    inline Amount operator/(double by) const
+    {
+        return Amount { _value / by };
     }
     
     inline Amount &operator*=(const Amount &other)

@@ -23,9 +23,14 @@ struct PlaceOrder<S, OrderType::Market> : public Event
 };
 
 template <Side S>
-struct PlaceOrder<S, OrderType::Limit> : public PlaceOrder<S, OrderType::Market>
+struct PlaceOrder<S, OrderType::Limit> : public Event
 {
+    static constexpr std::string_view NAME = "PlaceOrder";
+    
+    OrderId client_order_id;
+    
     Price price;
+    Amount amount;
 };
 
 } // namespace wcs::events
@@ -59,9 +64,9 @@ struct fmt::formatter<wcs::events::PlaceOrder<S, OT>>
             return fmt::format_to(
                 ctx.out(),
                 R"({{"event": "{}", "ts": {}, "id": {}, "side": "{}", "type": "{}", "client_order_id": {}, )"
-                R"("amount": {}, "price": {}}})",
+                R"("price": {}, "amount": {}}})",
                 wcs::events::PlaceOrder<S, OT>::NAME, event.ts.count(), event.id, wcs::toString(S), wcs::toString(OT),
-                event.client_order_id, event.amount, event.price);
+                event.client_order_id, event.price, event.amount);
         }
     }
 };
