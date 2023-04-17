@@ -6,10 +6,11 @@
 
 #include "entities/level.hpp"
 #include "entities/side.hpp"
-#include "events/move_order_to.hpp"
-#include "events/order_update.hpp"
-#include "events/order_book_update.hpp"
+#include "events/decrease_level.hpp"
 #include "events/freeze_order.hpp"
+#include "events/move_order_to.hpp"
+#include "events/order_book_update.hpp"
+#include "events/order_update.hpp"
 #include "logger.hpp"
 #include "order_manager.hpp"
 #include "utilits/side_comparison.hpp"
@@ -104,6 +105,10 @@ public:
         {
             const auto is_rest_amount_correct = [] (auto strategy_orders)
             {
+                if (strategy_orders->empty()) {
+                    return true;
+                }
+                
                 auto order = strategy_orders->begin();
                 if (!order->restAmount()) {
                     return false;
@@ -147,6 +152,37 @@ public:
                 is_historical_depth_correct(_historical_depth.get<Side::Sell>());
         }
         ());
+    
+        assert([&] ()
+        {
+            const auto is_volume_before_correct = [&] <Side S> (auto strategy_orders, const Depth<S> &historical_depth)
+            {
+                auto level = historical_depth.begin();
+                
+                for (const auto &order : *strategy_orders) {
+                    while (level != historical_depth.end() && utilits::sideGreater<S>(level->price(), order.price())) {
+                        ++level;
+                    }
+                    
+                    if (level->price() != order.price()) {
+                        continue;
+                    }
+                    
+                    if (order.volumeBefore() > level->volume()) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            };
+    
+            const auto strategy_orders = _order_manager.lock()->limitOrders();
+            
+            return
+                is_volume_before_correct(strategy_orders.get<Side::Buy>(), _historical_depth.get<Side::Buy>()) &&
+                is_volume_before_correct(strategy_orders.get<Side::Sell>(), _historical_depth.get<Side::Sell>());
+        }
+        ());
     }
     
     void process(const events::OrderUpdate<OrderStatus::New> &event)
@@ -159,11 +195,49 @@ public:
         assert(order.status() == OrderStatus::New);
         
         if (order.side() == Side::Buy) {
-            placeOrder<Side::Buy>(order.id(), order.price());
+            placeOrder<Side::Buy>(order);
         }
         else {
-            placeOrder<Side::Sell>(order.id(), order.price());
+            placeOrder<Side::Sell>(order);
         }
+    }
+    
+    template <Side S>
+    void process(const events::DecreaseLevel<S> &event)
+    {
+        _logger.gotEvent(event);
+        
+        const auto &depth = _historical_depth.get<S>();
+        auto level = depth.begin();
+        while (utilits::sideGreater<S>(level->price(), event.price)) {
+            ++level;
+        }
+        if (level->price() == event.price) {
+            if (level->volume() < event.volume) {
+                WCS_EXCEPTION(std::runtime_error, "Decreasing volume greater than level volume");
+            }
+            
+            level->decreaseVolume(event.volume);
+        }
+    
+        assert([&] ()
+        {
+            const auto strategy_orders = _order_manager.lock()->limitOrders().get<S>();
+            auto order = strategy_orders->begin();
+            while (utilits::sideGreater<S>(order->price(), level->price())) {
+                ++order;
+            }
+            while (order->price() == level->price()) {
+                if (order->volumeBefore() > level->volume()) {
+                    return false;
+                }
+                
+                ++order;
+            }
+            
+            return true;
+        }
+        ());
     }
     
     template <Side S>
@@ -190,17 +264,15 @@ public:
     
 private:
     template <Side S>
-    void placeOrder(OrderId id, const Price &price)
+    void placeOrder(const OrderHandler &order)
     {
-        if (!isIn<S>(price)) {
-            _logger.warning(
-                R"(Strategy order: {{"client_order_id": {}, "price": {}}}, out of order book, it will be freezed)",
-                id, price);
+        if (!isIn<S>(order.price())) {
+            _logger.debug(R"(Order: {}, out of order book, it will be freezed)", order);
         
-            generateFreezeOrder(id);
+            generateFreezeOrder(order.id());
         }
         else {
-            generateMoveOrderTo(id, getVolume<S>(price));
+            generateMoveOrderTo(order.id(), getVolume<S>(order.price()));
         }
     }
     
@@ -336,10 +408,7 @@ private:
                 break; // all next orders has been freezed before
             }
         
-            _logger.warning(
-                R"(Strategy order: {{"client_order_id": {}, "price": {}}}, out of order book, it will be freezed)",
-                order->id(), order->price()
-            );
+            _logger.debug(R"(Order: {}, out of order book, it will be freezed)", *order);
         
             generateFreezeOrder(order->id());
         

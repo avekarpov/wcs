@@ -54,6 +54,13 @@ public:
         _volume += volume;
     }
     
+    void decreaseVolume(const Amount &volume)
+    {
+        assert(_volume >= volume);
+        
+        _volume -= volume;
+    }
+    
 private:
     Price _price;
     Amount _volume;

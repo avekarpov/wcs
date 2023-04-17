@@ -2,7 +2,6 @@
 
 #include <wcs/order_book.hpp>
 #include <wcs/order_controller.hpp>
-#include <wcs/order_manager.hpp>
 
 #include "../spies/consumer.hpp"
 #include "../utilits/event_builder.hpp"
@@ -10,6 +9,8 @@
 using namespace wcs;
 
 using spies::Consumer;
+
+// TODO: test decreasing level
 
 TEST_CASE("OrderBook")
 {
