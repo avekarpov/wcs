@@ -207,14 +207,14 @@ public:
     {
         _logger.gotEvent(event);
         
-        const auto &depth = _historical_depth.get<S>();
+        auto &depth = _historical_depth.get<S>();
         auto level = depth.begin();
         while (utilits::sideGreater<S>(level->price(), event.price)) {
             ++level;
         }
         if (level->price() == event.price) {
             if (level->volume() < event.volume) {
-                WCS_EXCEPTION(std::runtime_error, "Decreasing volume greater than level volume");
+                throw WCS_EXCEPTION(std::runtime_error, "Decreasing volume greater than level volume");
             }
             
             level->decreaseVolume(event.volume);
