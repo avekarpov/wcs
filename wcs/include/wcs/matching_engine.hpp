@@ -38,7 +38,6 @@ public:
     
         executeMarketOrders(event);
         executeLimitOrders(event);
-        decreaseLevel(event);
     }
     
 private:
@@ -123,32 +122,20 @@ private:
             ++order;
         }
         
-        if (spend_volume_for_shift + rest_volume_for_fill) {
+        const auto decrease_level_volume = spend_volume_for_shift + rest_volume_for_fill;
+        if (decrease_level_volume) {
+            generateDecreaseLevel<S>(price, decrease_level_volume);
+            
+            // TODO: move this logic in order book maybe
             while (order != limit_orders->end() && price == order->price()) {
-                generateShiftOrder(order->id(), spend_volume_for_shift + rest_volume_for_fill);
+                generateShiftOrder(order->id(), decrease_level_volume);
                 ++order;
             }
         }
-    
+        
         for (const auto &order_fill_volume : _orders_fill_volume) {
             generateFillOrder(order_fill_volume.first, order_fill_volume.second);
         }
-    }
-    
-    void decreaseLevel(const events::Trade &event)
-    {
-        if (event.maker_side == Side::Buy) {
-            decreaseLevel<Side::Buy>(event.price, event.volume);
-        }
-        else {
-            decreaseLevel<Side::Sell>(event.price, event.volume);
-        }
-    }
-    
-    template <Side S>
-    void decreaseLevel(const Price &price, const Amount &volume)
-    {
-        generateDecreaseLevel<S>(price, volume);
     }
     
 private:
