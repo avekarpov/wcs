@@ -218,6 +218,10 @@ public:
             }
             
             level->decreaseVolume(event.volume);
+            
+            if (!level->volume()) {
+                depth.erase(level);
+            }
         }
     
         assert([&] ()

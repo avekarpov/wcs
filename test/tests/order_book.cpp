@@ -10,8 +10,6 @@ using namespace wcs;
 
 using spies::Consumer;
 
-// TODO: test decreasing level
-
 TEST_CASE("OrderBook")
 {
     auto consumer = std::make_shared<Consumer>();
@@ -1042,6 +1040,53 @@ TEST_CASE("OrderBook")
                     }
                 }
             }
+        }
+    }
+    
+    SECTION("Decrease level")
+    {
+        consumer->clear();
+    
+        {
+            order_book->process(createEvent<events::DecreaseLevel<Side::Buy>>(
+                Price { 60 },
+                Amount { 4 }
+            ));
+        
+            auto level = order_book->historicalDepth().get<Side::Buy>().begin();
+            ++level;
+            REQUIRE(level->price() == Price { 60 });
+            CHECK(level->volume() == Amount { 2 });
+    
+            order_book->process(createEvent<events::DecreaseLevel<Side::Buy>>(
+                Price { 60 },
+                Amount { 2 }
+            ));
+    
+            level = order_book->historicalDepth().get<Side::Buy>().begin();
+            ++level;
+            CHECK(level->price() == Price { 50 });
+        }
+    
+        {
+            order_book->process(createEvent<events::DecreaseLevel<Side::Sell>>(
+                Price { 140 },
+                Amount { 4 }
+            ));
+        
+            auto level = order_book->historicalDepth().get<Side::Sell>().begin();
+            ++level;
+            REQUIRE(level->price() == Price { 140 });
+            CHECK(level->volume() == Amount { 10 });
+        
+            order_book->process(createEvent<events::DecreaseLevel<Side::Sell>>(
+                Price { 140 },
+                Amount { 10 }
+            ));
+        
+            level = order_book->historicalDepth().get<Side::Sell>().begin();
+            ++level;
+            CHECK(level->price() == Price { 150 });
         }
     }
 }

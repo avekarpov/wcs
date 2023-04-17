@@ -68,16 +68,23 @@ public:
     {
         _logger.gotEvent(event);
     
-        // TODO: check order params
-        
-        _order_manager->remove(event.client_order_id);
+        // TODO: check order params and state
     
+        auto &order = _order_manager->get(event.client_order_id);
+        
+        order.updateStatus(OrderStatus::Canceled);
+        _logger.debug(R"(Order: {}, cancelled)");
+        
         generateOrderUpdate<OrderStatus::Canceled>(event.client_order_id);
+    
+        _order_manager->remove(event.client_order_id);
     }
     
     void process(const events::FillOrder &event)
     {
         _logger.gotEvent(event);
+    
+        // TODO: check order params and state
         
         auto &order = _order_manager->get(event.client_order_id);
     
@@ -87,9 +94,9 @@ public:
             order.updateStatus(OrderStatus::Filled);
             _logger.debug(R"(Order: {}, filled)", order);
             
+            generateOrderUpdate<OrderStatus::Filled>(event.client_order_id, order.filledAmount());
+    
             _order_manager->remove(event.client_order_id);
-            
-            generateOrderUpdate<OrderStatus::Filled>(event.client_order_id);
         }
         else {
             order.updateStatus(OrderStatus::Partially);
@@ -103,13 +110,14 @@ public:
     {
         _logger.gotEvent(event);
     
+        // TODO: check order params and state
+        
         auto &order = _order_manager->get(event.client_order_id);
     
         order.updateVolumeBefore(event.volume_before);
         
         if (order.status() == OrderStatus::New) {
             order.updateStatus(OrderStatus::Placed);
-            
             _logger.info(R"(Order: {} placed)", order);
             
             generateOrderUpdate<OrderStatus::Placed>(event.client_order_id);
@@ -120,12 +128,16 @@ public:
     {
         _logger.gotEvent(event);
     
+        // TODO: check order params and state
+        
         _order_manager->get(event.client_order_id).freeze();
     }
     
     void process(const events::UnfreezeOrder &event)
     {
         _logger.gotEvent(event);
+    
+        // TODO: check order params and state
         
         _order_manager->get(event.client_order_id).unfreeze();
     }
@@ -134,9 +146,9 @@ public:
     {
         _logger.gotEvent(event);
     
-        auto &order = _order_manager->get(event.client_order_id);
-        
-        order.shift(event.volume);
+        // TODO: check order params and state
+    
+        _order_manager->get(event.client_order_id).shift(event.volume);
     }
     
 private:
