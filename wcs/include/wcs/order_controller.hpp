@@ -7,6 +7,7 @@
 #include "events/move_order_to.hpp"
 #include "events/order_update.hpp"
 #include "events/place_order.hpp"
+#include "events/shift_order.hpp"
 #include "order_manager.hpp"
 #include "utilits/exception.hpp"
 #include "utilits/side_comparison.hpp"
@@ -50,6 +51,9 @@ public:
             
             // Market order is placed instantly
             order.updateStatus(OrderStatus::Placed);
+            
+            _logger.debug(R"(Order: {}, placed)", order);
+            
             generateOrderUpdate<OrderStatus::Placed>(event.client_order_id);
         }
         else {
@@ -80,11 +84,17 @@ public:
         order.fill(event.amount);
         
         if (!order.restAmount()) {
+            order.updateStatus(OrderStatus::Filled);
+            _logger.debug(R"(Order: {}, filled)", order);
+            
             _order_manager->remove(event.client_order_id);
-    
+            
             generateOrderUpdate<OrderStatus::Filled>(event.client_order_id);
         }
         else {
+            order.updateStatus(OrderStatus::Partially);
+            _logger.debug(R"(Order: {}, partially filled)", order);
+            
             generateOrderUpdate<OrderStatus::Partially>(event.client_order_id, order.filledAmount());
         }
     }
@@ -99,6 +109,8 @@ public:
         
         if (order.status() == OrderStatus::New) {
             order.updateStatus(OrderStatus::Placed);
+            
+            _logger.info(R"(Order: {} placed)", order);
             
             generateOrderUpdate<OrderStatus::Placed>(event.client_order_id);
         }
@@ -116,6 +128,15 @@ public:
         _logger.gotEvent(event);
         
         _order_manager->get(event.client_order_id).unfreeze();
+    }
+    
+    void process(const events::ShiftOrder &event)
+    {
+        _logger.gotEvent(event);
+    
+        auto &order = _order_manager->get(event.client_order_id);
+        
+        order.shift(event.volume);
     }
     
 private:
