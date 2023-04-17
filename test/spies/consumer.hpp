@@ -63,6 +63,43 @@ public:
         return _unfreeze_order_events;
     }
     
+    template <Side S>
+    void process(const events::DecreaseLevel<S> &event)
+    {
+        _decrease_level_events.push_back(event);
+        
+        Base::process(event);
+    }
+    
+    const auto &decreaseLevelEvents() const
+    {
+        return _decrease_level_events;
+    }
+    
+    void process(const events::ShiftOrder &event)
+    {
+        _shift_order_events.push_back(event);
+        
+        Base::process(event);
+    }
+    
+    const auto &shiftOrderEvents() const
+    {
+        return _shift_order_events;
+    }
+    
+    void process(const events::FillOrder &event)
+    {
+        _fill_order_events.push_back(event);
+        
+        Base::process(event);
+    }
+    
+    const auto &fillOrderEvents() const
+    {
+        return _fill_order_events;
+    }
+    
     void clear()
     {
         _move_order_events.clear();
@@ -86,6 +123,14 @@ private:
     std::vector<events::FreezeOrder> _freeze_order_events;
     std::vector<events::UnfreezeOrder> _unfreeze_order_events;
     
+    std::vector<
+        std::variant<
+            events::DecreaseLevel<Side::Buy>,
+            events::DecreaseLevel<Side::Sell>>> _decrease_level_events;
+    
+    std::vector<events::ShiftOrder> _shift_order_events;
+    
+    std::vector<events::FillOrder> _fill_order_events;
 };
 
 } // namespace wcs::spies
