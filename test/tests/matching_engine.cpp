@@ -149,7 +149,7 @@ void limitOrders(
     matching_engine->process(createEvent<events::Trade>(
         TradeId { 4 },
         Price { 90 },
-        Amount { 18 },
+        Amount { 20 },
         S
     ));
     
@@ -163,7 +163,7 @@ void limitOrders(
     }
     CHECK(shift_order_events.size() == 3);
     
-    const auto fill_order_events = consumer->fillOrderEvents();
+    const auto &fill_order_events = consumer->fillOrderEvents();
     auto fill_order = fill_order_events.begin();
     CHECK(fill_order->client_order_id == OrderId { 3 });
     CHECK(fill_order->amount == Amount { 5 });
@@ -183,6 +183,15 @@ void limitOrders(
     CHECK(fill_order->client_order_id == OrderId { 6 });
     CHECK(fill_order->amount == Amount { 8 });
     CHECK(fill_order_events.size() == 6);
+    
+    const auto &decrease_level_events = consumer->decreaseLevelEvents();
+    auto decrease_level = decrease_level_events.begin();
+    CHECK(std::get<events::DecreaseLevel<S>>(*decrease_level).price == Price { 90 });
+    CHECK(std::get<events::DecreaseLevel<S>>(*decrease_level).volume == Amount { 10 });
+    ++decrease_level;
+    CHECK(std::get<events::DecreaseLevel<S>>(*decrease_level).price == Price { 90 });
+    CHECK(std::get<events::DecreaseLevel<S>>(*decrease_level).volume == Amount { 12 });
+    CHECK(decrease_level_events.size() == 2);
 }
 
 TEST_CASE("MatchingEngine")
@@ -198,10 +207,7 @@ TEST_CASE("MatchingEngine")
     matching_engine->setOrderManager(order_controller->orderManager());
     consumer->setMatchingEngine(matching_engine);
     
-    SECTION("Fill order")
-    {
-        // SIDE_SECTION("Market orders", marketOrders, consumer, order_controller, matching_engine);
+    SIDE_SECTION("Fill market orders", marketOrders, consumer, order_controller, matching_engine);
     
-        SIDE_SECTION("Limit orders", limitOrders, consumer, order_controller, matching_engine);
-    }
+    SIDE_SECTION("Fill limit orders and decrease level", limitOrders, consumer, order_controller, matching_engine);
 }
