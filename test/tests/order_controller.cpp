@@ -12,10 +12,11 @@ using namespace wcs;
 using spies::Consumer;
 
 // TODO: add second order for price level
+// TODO: test shifting order
 // TODO: refactoring
 
 template <Side S>
-void MarketOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderController<Consumer>> order_controller)
+void marketOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderController<Consumer>> order_controller)
 {
     const auto order_manager = order_controller->orderManager();
     const auto market_orders = order_manager->marketOrders().get<S>();
@@ -176,7 +177,7 @@ void MarketOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderContr
 }
 
 template <Side S>
-void LimitOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderController<Consumer>> order_controller)
+void limitOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderController<Consumer>> order_controller)
 {
     const auto order_manager = order_controller->orderManager();
     const auto limit_orders = order_manager->limitOrders().get<S>();
@@ -546,7 +547,7 @@ TEST_CASE("OrderController")
         order_book->processAndComplete(update);
     }
     
-    SIDE_SECTION(MarketOrders, consumer, order_controller);
+    SIDE_SECTION("Market orders", marketOrders, consumer, order_controller);
     
-    SIDE_SECTION(LimitOrders, consumer, order_controller);
+    SIDE_SECTION("Limit orders", limitOrders, consumer, order_controller);
 }
