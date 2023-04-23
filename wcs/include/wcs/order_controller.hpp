@@ -23,13 +23,13 @@ protected:
     
 };
 
-template <class Consumer>
+template <class Consumer_t>
 class OrderController : public OrderControllerLogger
 {
 public:
     OrderController() : _order_manager { std::make_shared<OrderManager>() } { }
     
-    void setConsumer(std::shared_ptr<Consumer> consumer)
+    void setConsumer(std::shared_ptr<Consumer_t> consumer)
     {
         _consumer = consumer;
     }
@@ -163,7 +163,7 @@ private:
     }
     
 private:
-    std::weak_ptr<Consumer> _consumer;
+    std::weak_ptr<Consumer_t> _consumer;
     std::shared_ptr<OrderManager> _order_manager;
     
 };

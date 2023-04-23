@@ -25,13 +25,13 @@ protected:
     
 };
 
-template <class Consumer>
+template <class Consumer_t>
 class OrderBook : public OrderBookLogger
 {
 public:
     
 public:
-    void setConsumer(std::shared_ptr<Consumer> consumer)
+    void setConsumer(std::shared_ptr<Consumer_t> consumer)
     {
         _consumer = consumer;
     }
@@ -521,7 +521,7 @@ private:
     }
     
 private:
-    std::weak_ptr<Consumer> _consumer;
+    std::weak_ptr<Consumer_t> _consumer;
     std::weak_ptr<const OrderManager> _order_manager;
     
     SidePair<Depth> _historical_depth;

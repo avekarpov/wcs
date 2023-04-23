@@ -18,11 +18,11 @@ protected:
     inline static Logger _logger { "MatchingEngine" };
 };
 
-template <class Consumer>
+template <class Consumer_t>
 class MatchingEngine : public MatchingEngineLogger
 {
 public:
-    void setConsumer(std::shared_ptr<Consumer> consumer)
+    void setConsumer(std::shared_ptr<Consumer_t> consumer)
     {
         _consumer = consumer;
     }
@@ -181,7 +181,7 @@ private:
     }
     
 private:
-    std::weak_ptr<Consumer> _consumer;
+    std::weak_ptr<Consumer_t> _consumer;
     std::weak_ptr<const OrderManager> _order_manager;
     
 };
