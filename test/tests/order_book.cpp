@@ -2,7 +2,6 @@
 
 #include <wcs/order_book.hpp>
 #include <wcs/order_controller.hpp>
-#include <wcs/order_manager.hpp>
 
 #include "../spies/consumer.hpp"
 #include "../utilits/event_builder.hpp"
@@ -1041,6 +1040,53 @@ TEST_CASE("OrderBook")
                     }
                 }
             }
+        }
+    }
+    
+    SECTION("Decrease level")
+    {
+        consumer->clear();
+    
+        {
+            order_book->process(createEvent<events::DecreaseLevel<Side::Buy>>(
+                Price { 60 },
+                Amount { 4 }
+            ));
+        
+            auto level = order_book->historicalDepth().get<Side::Buy>().begin();
+            ++level;
+            REQUIRE(level->price() == Price { 60 });
+            CHECK(level->volume() == Amount { 2 });
+    
+            order_book->process(createEvent<events::DecreaseLevel<Side::Buy>>(
+                Price { 60 },
+                Amount { 2 }
+            ));
+    
+            level = order_book->historicalDepth().get<Side::Buy>().begin();
+            ++level;
+            CHECK(level->price() == Price { 50 });
+        }
+    
+        {
+            order_book->process(createEvent<events::DecreaseLevel<Side::Sell>>(
+                Price { 140 },
+                Amount { 4 }
+            ));
+        
+            auto level = order_book->historicalDepth().get<Side::Sell>().begin();
+            ++level;
+            REQUIRE(level->price() == Price { 140 });
+            CHECK(level->volume() == Amount { 10 });
+        
+            order_book->process(createEvent<events::DecreaseLevel<Side::Sell>>(
+                Price { 140 },
+                Amount { 10 }
+            ));
+        
+            level = order_book->historicalDepth().get<Side::Sell>().begin();
+            ++level;
+            CHECK(level->price() == Price { 150 });
         }
     }
 }

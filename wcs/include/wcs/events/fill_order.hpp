@@ -21,6 +21,8 @@ struct FillOrder : public Event
     Amount amount;
 };
 
+// TODO: struct FillOrders or BatchFill
+
 } // namespace wcs::events
 
 template <>

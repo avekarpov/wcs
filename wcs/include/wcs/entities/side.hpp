@@ -9,8 +9,18 @@ namespace wcs
 enum class Side
 {
     Buy = 0,
-    Sell,
+    Sell
 };
+
+constexpr Side opposite(Side S)
+{
+    if (S == Side::Buy) {
+        return Side::Sell;
+    }
+    else {
+        return Side::Buy;
+    }
+}
 
 constexpr std::string_view toString(Side S)
 {

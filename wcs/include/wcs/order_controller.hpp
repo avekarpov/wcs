@@ -7,6 +7,7 @@
 #include "events/move_order_to.hpp"
 #include "events/order_update.hpp"
 #include "events/place_order.hpp"
+#include "events/shift_order.hpp"
 #include "order_manager.hpp"
 #include "utilits/exception.hpp"
 #include "utilits/side_comparison.hpp"
@@ -50,6 +51,9 @@ public:
             
             // Market order is placed instantly
             order.updateStatus(OrderStatus::Placed);
+            
+            _logger.debug(R"(Order: {}, placed)", order);
+            
             generateOrderUpdate<OrderStatus::Placed>(event.client_order_id);
         }
         else {
@@ -64,27 +68,40 @@ public:
     {
         _logger.gotEvent(event);
     
-        // TODO: check order params
-        
-        _order_manager->remove(event.client_order_id);
+        // TODO: check order params and state
     
+        auto &order = _order_manager->get(event.client_order_id);
+        
+        order.updateStatus(OrderStatus::Canceled);
+        _logger.debug(R"(Order: {}, cancelled)");
+        
         generateOrderUpdate<OrderStatus::Canceled>(event.client_order_id);
+    
+        _order_manager->remove(event.client_order_id);
     }
     
     void process(const events::FillOrder &event)
     {
         _logger.gotEvent(event);
+    
+        // TODO: check order params and state
         
         auto &order = _order_manager->get(event.client_order_id);
     
         order.fill(event.amount);
         
         if (!order.restAmount()) {
-            _order_manager->remove(event.client_order_id);
+            order.updateStatus(OrderStatus::Filled);
+            _logger.debug(R"(Order: {}, filled)", order);
+            
+            generateOrderUpdate<OrderStatus::Filled>(event.client_order_id, order.filledAmount());
     
-            generateOrderUpdate<OrderStatus::Filled>(event.client_order_id);
+            _order_manager->remove(event.client_order_id);
         }
         else {
+            order.updateStatus(OrderStatus::Partially);
+            _logger.debug(R"(Order: {}, partially filled)", order);
+            
             generateOrderUpdate<OrderStatus::Partially>(event.client_order_id, order.filledAmount());
         }
     }
@@ -93,12 +110,15 @@ public:
     {
         _logger.gotEvent(event);
     
+        // TODO: check order params and state
+        
         auto &order = _order_manager->get(event.client_order_id);
     
         order.updateVolumeBefore(event.volume_before);
         
         if (order.status() == OrderStatus::New) {
             order.updateStatus(OrderStatus::Placed);
+            _logger.info(R"(Order: {} placed)", order);
             
             generateOrderUpdate<OrderStatus::Placed>(event.client_order_id);
         }
@@ -108,14 +128,27 @@ public:
     {
         _logger.gotEvent(event);
     
+        // TODO: check order params and state
+        
         _order_manager->get(event.client_order_id).freeze();
     }
     
     void process(const events::UnfreezeOrder &event)
     {
         _logger.gotEvent(event);
+    
+        // TODO: check order params and state
         
         _order_manager->get(event.client_order_id).unfreeze();
+    }
+    
+    void process(const events::ShiftOrder &event)
+    {
+        _logger.gotEvent(event);
+    
+        // TODO: check order params and state
+    
+        _order_manager->get(event.client_order_id).shift(event.volume);
     }
     
 private:

@@ -1,8 +1,9 @@
 #ifndef WCS_MOCKS_CONSUMER_HPP
 #define WCS_MOCKS_CONSUMER_HPP
 
-#include <wcs/order_controller.hpp>
+#include <wcs/matching_engine.hpp>
 #include <wcs/order_book.hpp>
+#include <wcs/order_controller.hpp>
 
 namespace wcs::mocks
 {
@@ -21,6 +22,11 @@ public:
     void setOrderBook(std::shared_ptr<OrderBook<C>> order_book)
     {
         _order_book = order_book;
+    }
+    
+    void setMatchingEngine(std::shared_ptr<MatchingEngine<C>> matching_engine)
+    {
+        _matching_engine = matching_engine;
     }
     
     template <OrderStatus OS>
@@ -46,6 +52,22 @@ public:
         processToOrderController(event);
     }
     
+    template <Side S>
+    void process(const events::DecreaseLevel<S> &event)
+    {
+        processToOrderBook(event);
+    }
+    
+    void process(const events::ShiftOrder &event)
+    {
+        processToOrderController(event);
+    }
+    
+    void process(const events::FillOrder &event)
+    {
+        processToOrderController(event);
+    }
+    
 private:
     template <class Event>
     void processToOrderController(const Event &event)
@@ -63,9 +85,18 @@ private:
         }
     }
     
+    template <class Event>
+    void processToMatchingEngine(const Event &event)
+    {
+        if (_matching_engine) {
+            _matching_engine.lock()->process(event);
+        }
+    }
+    
 private:
     std::weak_ptr<OrderController<C>> _order_controller;
     std::weak_ptr<OrderBook<C>> _order_book;
+    std::weak_ptr<MatchingEngine<C>> _matching_engine;
 
 };
 

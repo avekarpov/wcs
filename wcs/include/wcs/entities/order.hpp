@@ -1,6 +1,8 @@
 #ifndef WCS_ORDER_HPP
 #define WCS_ORDER_HPP
 
+#include <spdlog/fmt/fmt.h>
+
 #include "amount.hpp"
 #include "id.hpp"
 #include "price.hpp"
@@ -101,6 +103,7 @@ public:
         }
     }
     
+    // TODO: change price and amount
     Order(Side side, OrderType type, const Amount &amount, const Price &price)
     :
         _side { side },
@@ -202,7 +205,7 @@ public:
     {
         assert(!_is_freezed);
         assert(isExecution(_status));
-    
+        
         assert(amount > Amount { 0 });
         assert(_filled_amount + amount <= _amount);
         
@@ -219,15 +222,28 @@ public:
     void updateVolumeBefore(const Amount &volume)
     {
         assert(_type == OrderType::Limit);
-    
+        
         assert(!_is_freezed);
         assert(isExecution(_status) || _status == OrderStatus::New);
-    
+        
         assert(_volume_before >= volume);
         
         _volume_before = volume;
     }
 
+    void shift(const Amount &volume)
+    {
+        assert(_type == OrderType::Limit);
+        
+        assert(!_is_freezed);
+        assert(isExecution(_status) || _status == OrderStatus::New);
+        
+        assert(volume);
+        assert(_volume_before >= volume);
+        
+        _volume_before -= volume;
+    }
+    
     bool isFreezed() const
     {
         return _is_freezed;
@@ -259,5 +275,55 @@ private:
 };
 
 } // namespace wcs
+
+template <>
+struct fmt::formatter<wcs::OrderHandler>
+{
+    constexpr auto parse(format_parse_context& ctx) -> decltype(ctx.begin())
+    {
+        auto it = ctx.begin(), end = ctx.end();
+        
+        if (it != end && *it != '}') {
+            throw WCS_EXCEPTION(format_error, "Invalid format");
+        }
+        
+        return it;
+    }
+    
+    template <class FormatContext>
+    auto format(const wcs::OrderHandler &order, FormatContext& ctx) const -> decltype(ctx.out())
+    {
+        if (order.type() == wcs::OrderType::Limit) {
+            return fmt::format_to(
+                ctx.out(),
+                R"({{"id": {}, "type": "{}", "side": "{}", "price": {}, "amount": {}, )"
+                R"("status": "{}", "filled_amount": {}, "volume_before": {}, "is_freezed": {}}})",
+                order.id(),
+                wcs::toString(order.type()),
+                wcs::toString(order.side()),
+                order.price(),
+                order.amount(),
+                wcs::toString(order.status()),
+                order.filledAmount(),
+                order.volumeBefore(),
+                order.isFreezed()
+            );
+        }
+        else {
+            return fmt::format_to(
+                ctx.out(),
+                R"({{"id": {}, "type": "{}", "side": "{}", "amount": {}, )"
+                R"("status": "{}", "filled_amount": {}, "is_freezed": {}}})",
+                order.id(),
+                wcs::toString(order.type()),
+                wcs::toString(order.side()),
+                order.amount(),
+                wcs::toString(order.status()),
+                order.filledAmount(),
+                order.isFreezed()
+            );
+        }
+    }
+};
 
 #endif //WCS_ORDER_HPP
