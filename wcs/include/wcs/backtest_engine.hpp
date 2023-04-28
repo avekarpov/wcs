@@ -84,7 +84,7 @@ public:
     {
         _order_book.processAndComplete(event);
     
-        _event_manager.lock()->FromBacktestEngine::process(std::as_const(event));
+        _event_manager.lock()->process(std::as_const(event));
     }
     
     template <OrderStatus OS>
@@ -94,7 +94,7 @@ public:
             _order_book.process(event);
         }
         else {
-            _event_manager.lock()->FromBacktestEngine::process(event);
+            _event_manager.lock()->process(event);
         }
     }
     
@@ -113,7 +113,7 @@ private:
     OrderBook_t<ThisClass> _order_book;
     MatchingEngine_t<ThisClass> _matching_engine;
     
-    std::weak_ptr<EventManager_t> _event_manager;
+    std::weak_ptr<FromBacktestEngine> _event_manager;
 };
 
 } // namespace wcs
