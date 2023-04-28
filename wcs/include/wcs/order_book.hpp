@@ -25,13 +25,11 @@ protected:
     
 };
 
-template <class Consumer>
+template <class Consumer_t>
 class OrderBook : public OrderBookLogger
 {
 public:
-    
-public:
-    void setConsumer(std::shared_ptr<Consumer> consumer)
+    void setConsumer(std::shared_ptr<Consumer_t> consumer)
     {
         _consumer = consumer;
     }
@@ -228,17 +226,17 @@ public:
         {
             const auto strategy_orders = _order_manager.lock()->limitOrders().get<S>();
             auto order = strategy_orders->begin();
-            while (utilits::sideGreater<S>(order->price(), level->price())) {
+            while (order != strategy_orders->end() &&utilits::sideGreater<S>(order->price(), level->price())) {
                 ++order;
             }
-            while (order->price() == level->price()) {
+            while (order != strategy_orders->end() && order->price() == level->price()) {
                 if (order->volumeBefore() > level->volume()) {
                     return false;
                 }
-                
+
                 ++order;
             }
-            
+
             return true;
         }
         ());
@@ -521,7 +519,7 @@ private:
     }
     
 private:
-    std::weak_ptr<Consumer> _consumer;
+    std::weak_ptr<Consumer_t> _consumer;
     std::weak_ptr<const OrderManager> _order_manager;
     
     SidePair<Depth> _historical_depth;

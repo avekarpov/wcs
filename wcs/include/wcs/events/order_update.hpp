@@ -17,19 +17,19 @@ struct OrderUpdate : public Event
     OrderId client_order_id;
 };
 
-template<>
+template <>
 struct OrderUpdate<OrderStatus::Partially> : public OrderUpdate<OrderStatus::New>
 {
     Amount amount;
 };
 
-template<>
+template <>
 struct OrderUpdate<OrderStatus::Filled> : public  OrderUpdate<OrderStatus::Partially>
 {
 
 };
 
-template<>
+template <>
 struct OrderUpdate<OrderStatus::Rejected> : public OrderUpdate<OrderStatus::New>
 {
     // TODO: add reason
