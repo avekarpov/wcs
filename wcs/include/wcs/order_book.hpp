@@ -29,8 +29,6 @@ template <class Consumer_t>
 class OrderBook : public OrderBookLogger
 {
 public:
-    
-public:
     void setConsumer(std::shared_ptr<Consumer_t> consumer)
     {
         _consumer = consumer;
@@ -228,17 +226,17 @@ public:
         {
             const auto strategy_orders = _order_manager.lock()->limitOrders().get<S>();
             auto order = strategy_orders->begin();
-            while (utilits::sideGreater<S>(order->price(), level->price())) {
+            while (order != strategy_orders->end() &&utilits::sideGreater<S>(order->price(), level->price())) {
                 ++order;
             }
-            while (order->price() == level->price()) {
+            while (order != strategy_orders->end() && order->price() == level->price()) {
                 if (order->volumeBefore() > level->volume()) {
                     return false;
                 }
-                
+
                 ++order;
             }
-            
+
             return true;
         }
         ());
