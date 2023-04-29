@@ -29,7 +29,7 @@ template <class Consumer_t>
 class OrderBook : public OrderBookLogger
 {
 public:
-    void setConsumer(std::shared_ptr<Consumer_t> consumer)
+    void setConsumer(const std::shared_ptr<Consumer_t> &consumer)
     {
         _consumer = consumer;
     }

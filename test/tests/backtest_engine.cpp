@@ -9,7 +9,7 @@
 
 using namespace wcs;
 
-using EventManager = fakes::EventManager<fakes::FromBacktestEngine, fakes::FromVirtualExchange>;
+using EventManager = fakes::EventManager<fakes::ToVirtualExchange, fakes::ToBacktestEngine>;
 using fakes::MatchingEngine;
 using fakes::OrderBook;
 using fakes::OrderController;
@@ -19,7 +19,7 @@ TEST_CASE("BacktestEngine")
     SECTION("Build")
     {
         auto backtest_engine =
-            std::make_shared<BacktestEngine<OrderController, OrderBook, MatchingEngine, EventManager>>();
+            std::make_shared<BacktestEngineBase<OrderController, OrderBook, MatchingEngine, EventManager>>();
         
         backtest_engine->init();
         

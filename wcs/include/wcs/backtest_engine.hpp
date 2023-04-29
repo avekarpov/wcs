@@ -13,17 +13,22 @@ template <
     template <class> class OrderBook_t,
     template <class> class MatchingEngine_t,
     class EventManager_t>
-class BacktestEngine :
+class BacktestEngineBase :
     public std::enable_shared_from_this<
-        BacktestEngine<OrderController_t, OrderBook_t, MatchingEngine_t, EventManager_t>>
+        BacktestEngineBase<OrderController_t, OrderBook_t, MatchingEngine_t, EventManager_t>>
 {
 private:
-    using ThisClass = BacktestEngine<OrderController_t, OrderBook_t, MatchingEngine_t, EventManager_t>;
+    using ThisClass = BacktestEngineBase<OrderController_t, OrderBook_t, MatchingEngine_t, EventManager_t>;
     using std::enable_shared_from_this<ThisClass>::shared_from_this;
     
-    using FromBacktestEngine = typename EventManager_t::FromBacktestEngine;
+    using VirtualExchange = typename EventManager_t::ToVirtualExchange;
     
 public:
+    void setEventManager(const std::shared_ptr<EventManager_t> &event_manager)
+    {
+        _virtual_exchange = event_manager;
+    }
+    
     void init()
     {
         auto self = shared_from_this();
@@ -36,11 +41,6 @@ public:
         
         _matching_engine.setConsumer(self);
         _matching_engine.setOrderManager(order_manager);
-    }
-    
-    void setEventManager(const std::shared_ptr<EventManager_t> &event_manager)
-    {
-        _event_manager = event_manager;
     }
     
     template <Side S, OrderType OT>
@@ -84,7 +84,7 @@ public:
     {
         _order_book.processAndComplete(event);
     
-        _event_manager.lock()->process(std::as_const(event));
+        _virtual_exchange.lock()->process(std::as_const(event));
     }
     
     template <OrderStatus OS>
@@ -94,7 +94,7 @@ public:
             _order_book.process(event);
         }
         else {
-            _event_manager.lock()->process(event);
+            _virtual_exchange.lock()->process(event);
         }
     }
     
@@ -106,6 +106,8 @@ public:
     void process(const events::Trade &event)
     {
         _matching_engine.process(event);
+    
+        _virtual_exchange.lock()->process(event);
     }
     
 private:
@@ -113,7 +115,7 @@ private:
     OrderBook_t<ThisClass> _order_book;
     MatchingEngine_t<ThisClass> _matching_engine;
     
-    std::weak_ptr<FromBacktestEngine> _event_manager;
+    std::weak_ptr<VirtualExchange> _virtual_exchange;
 };
 
 } // namespace wcs

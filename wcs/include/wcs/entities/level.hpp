@@ -2,6 +2,7 @@
 #define WCS_LEVEL_HPP
 
 #include <list>
+#include <cassert>
 
 #include <spdlog/fmt/fmt.h>
 
