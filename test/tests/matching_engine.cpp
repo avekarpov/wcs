@@ -5,7 +5,6 @@
 
 #include "../spies/consumer.hpp"
 #include "../utilits/side_section.hpp"
-#include "../utilits/event_builder.hpp"
 
 using namespace wcs;
 
@@ -19,7 +18,7 @@ void marketOrders(
 ) {
     const auto place_order = [&order_controller] (OrderId id, const Amount &amount)
     {
-        order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Market>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Market>>(
             id,
             amount
         ));
@@ -31,21 +30,21 @@ void marketOrders(
     
     consumer->clear();
     
-    matching_engine->process(createEvent<events::Trade>(
+    matching_engine->process(EventBuilder::build<events::Trade>(
        TradeId { 1 },
        Price { },
        Amount { 3 },
        Opposite
     ));
     
-    matching_engine->process(createEvent<events::Trade>(
+    matching_engine->process(EventBuilder::build<events::Trade>(
         TradeId { 2 },
         Price { },
         Amount { 6 },
         Opposite
     ));
     
-    matching_engine->process(createEvent<events::Trade>(
+    matching_engine->process(EventBuilder::build<events::Trade>(
         TradeId { 2 },
         Price { },
         Amount { 18 },
@@ -79,7 +78,7 @@ void limitOrders(
 ) {
     const auto place_order = [&order_controller] (OrderId id, const Price &price, const Amount &amount)
     {
-        order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Limit>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Limit>>(
             id,
             price,
             amount
@@ -116,7 +115,7 @@ void limitOrders(
         
         for (const auto &order : orders) {
             place_order(get<0>(order), get<1>(order), get<2>(order));
-            order_controller->process(createEvent<events::MoveOrderTo>(
+            order_controller->process(EventBuilder::build<events::MoveOrderTo>(
                 get<0>(order),
                 Amount { 10 }
             ));
@@ -125,28 +124,28 @@ void limitOrders(
     
     consumer->clear();
     
-    matching_engine->process(createEvent<events::Trade>(
+    matching_engine->process(EventBuilder::build<events::Trade>(
         TradeId { 1 },
         Price { 90 },
         Amount { 15 },
         S
     ));
     
-    matching_engine->process(createEvent<events::Trade>(
+    matching_engine->process(EventBuilder::build<events::Trade>(
         TradeId { 2 },
         Price { 90 },
         Amount { 3 },
         S
     ));
     
-    matching_engine->process(createEvent<events::Trade>(
+    matching_engine->process(EventBuilder::build<events::Trade>(
         TradeId { 3 },
         Price { 90 },
         Amount { 6 },
         S
     ));
     
-    matching_engine->process(createEvent<events::Trade>(
+    matching_engine->process(EventBuilder::build<events::Trade>(
         TradeId { 4 },
         Price { 90 },
         Amount { 20 },

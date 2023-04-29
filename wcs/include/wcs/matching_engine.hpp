@@ -1,10 +1,11 @@
 #ifndef WCS_MATCHING_ENGINE_HPP
 #define WCS_MATCHING_ENGINE_HPP
 
+#include "event_builder.hpp"
 #include "events/decrease_level.hpp"
+#include "events/fill_order.hpp"
 #include "events/move_order_to.hpp"
 #include "events/shift_order.hpp"
-#include "events/fill_order.hpp"
 #include "events/trade.hpp"
 #include "logger.hpp"
 #include "order_manager.hpp"
@@ -141,43 +142,23 @@ private:
 private:
     void generateShiftOrder(OrderId order_id, const Amount &volume) const
     {
-        _consumer.lock()->process(events::ShiftOrder
-        {
-            Ts { 0 }, EventId { 0 }, // TODO: change for event builder
-            order_id,
-            volume
-        });
+        _consumer.lock()->process(EventBuilder::build<events::ShiftOrder>(order_id, volume));
     }
     
     void generateMoveOrderTo(OrderId order_id, const Amount &volume_before) const
     {
-        _consumer.lock()->process(events::MoveOrderTo
-        {
-            Ts { 0 }, EventId { 0 }, // TODO: change for event builder
-            order_id,
-            volume_before
-        });
+        _consumer.lock()->process(EventBuilder::build<events::MoveOrderTo>(order_id, volume_before));
     }
     
     void generateFillOrder(OrderId order_id, const Amount &amount)
     {
-        _consumer.lock()->process(events::FillOrder
-        {
-            Ts { 0 }, EventId { 0 }, // TODO: change for event builder
-            order_id,
-            amount
-        });
+        _consumer.lock()->process(EventBuilder::build<events::FillOrder>(order_id, amount));
     }
     
     template <Side S>
     void generateDecreaseLevel(const Price &price, const Amount &volume)
     {
-        _consumer.lock()->process(events::DecreaseLevel<S>
-        {
-            Ts { 0 }, EventId { 0 }, // TODO: change for event builder
-            price,
-            volume
-        });
+        _consumer.lock()->process(EventBuilder::build<events::DecreaseLevel<S>>(price, volume));
     }
     
 private:

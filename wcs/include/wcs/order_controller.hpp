@@ -1,6 +1,7 @@
 #ifndef WCS_ORDER_CONTROLLER_HPP
 #define WCS_ORDER_CONTROLLER_HPP
 
+#include "event_builder.hpp"
 #include "events/cancel_order.hpp"
 #include "events/fill_order.hpp"
 #include "events/freeze_order.hpp"
@@ -8,10 +9,10 @@
 #include "events/order_update.hpp"
 #include "events/place_order.hpp"
 #include "events/shift_order.hpp"
+#include "logger.hpp"
 #include "order_manager.hpp"
 #include "utilits/exception.hpp"
 #include "utilits/side_comparison.hpp"
-#include "logger.hpp"
 
 namespace wcs
 {
@@ -155,11 +156,7 @@ private:
     template <OrderStatus OS, class ...Args>
     void generateOrderUpdate(Args &&...args)
     {
-        _consumer.lock()->process(events::OrderUpdate<OS>
-        {
-            Ts { 0 }, EventId { 0 }, // TODO: change for event builder
-            std::forward<Args>(args)...
-        });
+        _consumer.lock()->process(EventBuilder::build<events::OrderUpdate<OS>>(std::forward<Args>(args)...));
     }
     
 private:

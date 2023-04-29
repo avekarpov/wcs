@@ -1,11 +1,12 @@
 #ifndef WCS_ORDERBOOK_HPP
 #define WCS_ORDERBOOK_HPP
 
-#include <vector>
 #include <iostream>
+#include <vector>
 
 #include "entities/level.hpp"
 #include "entities/side.hpp"
+#include "event_builder.hpp"
 #include "events/decrease_level.hpp"
 #include "events/freeze_order.hpp"
 #include "events/move_order_to.hpp"
@@ -492,30 +493,17 @@ private:
     
     void generateMoveOrderTo(OrderId order_id, const Amount &volume_before) const
     {
-        _consumer.lock()->process(events::MoveOrderTo
-        {
-            Ts { 0 }, EventId { 0 }, // TODO: change for event builder
-            order_id,
-            volume_before
-        });
+        _consumer.lock()->process(EventBuilder::build<events::MoveOrderTo>(order_id, volume_before));
     }
     
     void generateFreezeOrder(OrderId order_id) const
     {
-        _consumer.lock()->process(events::FreezeOrder
-        {
-            Ts { 0 }, EventId { 0 }, // TODO: change for event builder
-            order_id
-        });
+        _consumer.lock()->process(EventBuilder::build<events::FreezeOrder>(order_id));
     }
     
     void generateUnfreezeOrder(OrderId order_id) const
     {
-        _consumer.lock()->process(events::UnfreezeOrder
-        {
-            Ts { 0 }, EventId { 0 }, // TODO: change for event builder
-            order_id
-        });
+        _consumer.lock()->process(EventBuilder::build<events::UnfreezeOrder>(order_id));
     }
     
 private:
