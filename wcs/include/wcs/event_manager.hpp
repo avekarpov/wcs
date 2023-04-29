@@ -1,6 +1,7 @@
 #ifndef WCS_EVENT_MANAGER_HPP
 #define WCS_EVENT_MANAGER_HPP
 
+#include "event_builder.hpp"
 #include "events/events.hpp"
 
 namespace wcs
@@ -16,6 +17,11 @@ public:
         _virtual_exchange = virtual_exchange;
     }
     
+    void process(const events::Trade &event)
+    {
+        _virtual_exchange.lock()->process(event);
+    }
+    
     void process(const events::OrderBookUpdate &event)
     {
         _virtual_exchange.lock()->process(event);
@@ -26,11 +32,6 @@ public:
     {
         static_assert(OS != OrderStatus::New);
     
-        _virtual_exchange.lock()->process(event);
-    }
-    
-    void process(const events::Trade &event)
-    {
         _virtual_exchange.lock()->process(event);
     }
     
@@ -49,8 +50,42 @@ public:
         _backtest_engine = backtest_engine;
     }
     
-    // TODO: process events
-
+    void process(const events::Trade &event)
+    {
+        updateTime(event);
+        
+        _backtest_engine.lock()->process(event);
+    }
+    
+    void processAndComplete(events::OrderBookUpdate &event)
+    {
+        updateTime(event);
+        
+        _backtest_engine.lock()->processAndComplete(event);
+    }
+    
+    template <Side S, OrderType OT>
+    void process(const events::PlaceOrder<S, OT> &event)
+    {
+        updateTime(event);
+    
+        _backtest_engine.lock()->process(event);
+    }
+    
+    void process(const events::CancelOrder &event)
+    {
+        updateTime(event);
+    
+        _backtest_engine.lock()->process(event);
+    }
+    
+private:
+    template <class Event_t>
+    void updateTime(const Event_t &event)
+    {
+        static_cast<EventManager_t &>(*this).updateTime(event.ts);
+    }
+    
 private:
     std::weak_ptr<BacktestEngine_t<EventManager_t>> _backtest_engine;
     
@@ -78,6 +113,12 @@ public:
     
     friend FromBacktestEngine;
     friend FromVirtualExchange;
+
+private:
+    void updateTime(Time time)
+    {
+        EventBuilder::updateTime(time);
+    }
     
 };
 
