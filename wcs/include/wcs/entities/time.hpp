@@ -12,6 +12,7 @@ using Seconds = std::chrono::seconds;
 using Minutes = std::chrono::minutes;
 
 using Ts = Milliseconds;
+using Time = Ts;
 
 } // namespace wcs
 
