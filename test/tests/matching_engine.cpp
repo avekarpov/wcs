@@ -19,6 +19,7 @@ void marketOrders(
     const auto place_order = [&order_controller] (OrderId id, const Amount &amount)
     {
         order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Market>>(
+            TimeManager::time(),
             id,
             amount
         ));
@@ -31,13 +32,15 @@ void marketOrders(
     consumer->clear();
     
     matching_engine->process(EventBuilder::build<events::Trade>(
-       TradeId { 1 },
-       Price { },
-       Amount { 3 },
-       Opposite
+        TimeManager::time(),
+        TradeId { 1 },
+        Price { },
+        Amount { 3 },
+        Opposite
     ));
     
     matching_engine->process(EventBuilder::build<events::Trade>(
+        TimeManager::time(),
         TradeId { 2 },
         Price { },
         Amount { 6 },
@@ -45,6 +48,7 @@ void marketOrders(
     ));
     
     matching_engine->process(EventBuilder::build<events::Trade>(
+        TimeManager::time(),
         TradeId { 2 },
         Price { },
         Amount { 18 },
@@ -79,6 +83,7 @@ void limitOrders(
     const auto place_order = [&order_controller] (OrderId id, const Price &price, const Amount &amount)
     {
         order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Limit>>(
+            TimeManager::time(),
             id,
             price,
             amount
@@ -116,6 +121,7 @@ void limitOrders(
         for (const auto &order : orders) {
             place_order(get<0>(order), get<1>(order), get<2>(order));
             order_controller->process(EventBuilder::build<events::MoveOrderTo>(
+                TimeManager::time(),
                 get<0>(order),
                 Amount { 10 }
             ));
@@ -125,6 +131,7 @@ void limitOrders(
     consumer->clear();
     
     matching_engine->process(EventBuilder::build<events::Trade>(
+        TimeManager::time(),
         TradeId { 1 },
         Price { 90 },
         Amount { 15 },
@@ -132,6 +139,7 @@ void limitOrders(
     ));
     
     matching_engine->process(EventBuilder::build<events::Trade>(
+        TimeManager::time(),
         TradeId { 2 },
         Price { 90 },
         Amount { 3 },
@@ -139,6 +147,7 @@ void limitOrders(
     ));
     
     matching_engine->process(EventBuilder::build<events::Trade>(
+        TimeManager::time(),
         TradeId { 3 },
         Price { 90 },
         Amount { 6 },
@@ -146,6 +155,7 @@ void limitOrders(
     ));
     
     matching_engine->process(EventBuilder::build<events::Trade>(
+        TimeManager::time(),
         TradeId { 4 },
         Price { 90 },
         Amount { 20 },

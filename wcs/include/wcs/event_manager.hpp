@@ -52,38 +52,23 @@ public:
     
     void process(const events::Trade &event)
     {
-        updateTime(event);
-        
         _backtest_engine.lock()->process(event);
     }
     
     void processAndComplete(events::OrderBookUpdate &event)
     {
-        updateTime(event);
-        
         _backtest_engine.lock()->processAndComplete(event);
     }
     
     template <Side S, OrderType OT>
     void process(const events::PlaceOrder<S, OT> &event)
     {
-        updateTime(event);
-    
         _backtest_engine.lock()->process(event);
     }
     
     void process(const events::CancelOrder &event)
     {
-        updateTime(event);
-    
         _backtest_engine.lock()->process(event);
-    }
-    
-private:
-    template <class Event_t>
-    void updateTime(const Event_t &event)
-    {
-        static_cast<EventManager_t &>(*this).updateTime(event.ts);
     }
     
 private:
@@ -113,12 +98,6 @@ public:
     
     friend FromBacktestEngine;
     friend FromVirtualExchange;
-
-private:
-    void updateTime(Time time)
-    {
-        EventBuilder::updateTime(time);
-    }
     
 };
 

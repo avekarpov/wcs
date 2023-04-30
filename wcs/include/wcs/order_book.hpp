@@ -14,6 +14,7 @@
 #include "events/order_update.hpp"
 #include "logger.hpp"
 #include "order_manager.hpp"
+#include "time_manager.hpp"
 #include "utilits/side_comparison.hpp"
 
 namespace wcs
@@ -493,17 +494,20 @@ private:
     
     void generateMoveOrderTo(OrderId order_id, const Amount &volume_before) const
     {
-        _consumer.lock()->process(EventBuilder::build<events::MoveOrderTo>(order_id, volume_before));
+        _consumer.lock()->process(
+            EventBuilder::build<events::MoveOrderTo>(TimeManager::time(), order_id, volume_before));
     }
     
     void generateFreezeOrder(OrderId order_id) const
     {
-        _consumer.lock()->process(EventBuilder::build<events::FreezeOrder>(order_id));
+        _consumer.lock()->process(
+            EventBuilder::build<events::FreezeOrder>(TimeManager::time(), order_id));
     }
     
     void generateUnfreezeOrder(OrderId order_id) const
     {
-        _consumer.lock()->process(EventBuilder::build<events::UnfreezeOrder>(order_id));
+        _consumer.lock()->process(
+            EventBuilder::build<events::UnfreezeOrder>(TimeManager::time(), order_id));
     }
     
 private:

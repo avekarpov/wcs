@@ -156,7 +156,8 @@ private:
     template <OrderStatus OS, class ...Args>
     void generateOrderUpdate(Args &&...args)
     {
-        _consumer.lock()->process(EventBuilder::build<events::OrderUpdate<OS>>(std::forward<Args>(args)...));
+        _consumer.lock()->process(
+            EventBuilder::build<events::OrderUpdate<OS>>(TimeManager::time(), std::forward<Args>(args)...));
     }
     
 private:

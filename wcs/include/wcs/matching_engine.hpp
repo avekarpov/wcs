@@ -9,6 +9,7 @@
 #include "events/trade.hpp"
 #include "logger.hpp"
 #include "order_manager.hpp"
+#include "time_manager.hpp"
 
 namespace wcs
 {
@@ -142,23 +143,27 @@ private:
 private:
     void generateShiftOrder(OrderId order_id, const Amount &volume) const
     {
-        _consumer.lock()->process(EventBuilder::build<events::ShiftOrder>(order_id, volume));
+        _consumer.lock()->process(
+            EventBuilder::build<events::ShiftOrder>(TimeManager::time(), order_id, volume));
     }
     
     void generateMoveOrderTo(OrderId order_id, const Amount &volume_before) const
     {
-        _consumer.lock()->process(EventBuilder::build<events::MoveOrderTo>(order_id, volume_before));
+        _consumer.lock()->process(
+            EventBuilder::build<events::MoveOrderTo>(TimeManager::time(), order_id, volume_before));
     }
     
     void generateFillOrder(OrderId order_id, const Amount &amount)
     {
-        _consumer.lock()->process(EventBuilder::build<events::FillOrder>(order_id, amount));
+        _consumer.lock()->process(
+            EventBuilder::build<events::FillOrder>(TimeManager::time(), order_id, amount));
     }
     
     template <Side S>
     void generateDecreaseLevel(const Price &price, const Amount &volume)
     {
-        _consumer.lock()->process(EventBuilder::build<events::DecreaseLevel<S>>(price, volume));
+        _consumer.lock()->process(
+            EventBuilder::build<events::DecreaseLevel<S>>(TimeManager::time(), price, volume));
     }
     
 private:
