@@ -7,7 +7,7 @@
 namespace wcs
 {
 
-// TODO: remove it after in single file
+// TODO: remove it after in single file and add test
 template <class EventManager_t, template <class> class VirtualExchange_t>
 class ToVirtualExchange
 {
@@ -40,7 +40,7 @@ private:
     
 };
 
-// TODO: remove it after in single file
+// TODO: remove it after in single file and add test
 template <class EventManager_t, template <class> class BacktestEngine_t>
 class ToBacktestEngine
 {
@@ -76,6 +76,7 @@ private:
     
 };
 
+// TODO: add test
 template <
     template <class, template <class> class> class ToVirtualExchange_t,
     template <class> class VirtualExchange_t,

@@ -7,6 +7,7 @@
 namespace wcs
 {
 
+// TODO: add test and move in parsers dir
 class OrderBookUpdateParser
 {
 public:

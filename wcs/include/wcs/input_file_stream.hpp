@@ -18,6 +18,7 @@ protected:
     
 };
 
+// TODO: add test
 template <class Parser, bool SkipHeader>
 class InputFileStream : public InputFileStreamLogger
 {
