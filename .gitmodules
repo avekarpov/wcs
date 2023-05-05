@@ -1,3 +1,6 @@
 [submodule "wcs/libs/spdlog"]
 	path = wcs/libs/spdlog
 	url = git@github.com:gabime/spdlog.git
+[submodule "wcs/libs/fast_float"]
+	path = wcs/libs/fast_float
+	url = git@github.com:fastfloat/fast_float.git
