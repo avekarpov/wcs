@@ -13,7 +13,7 @@ class OrderBookUpdateParser
 public:
     using Event = events::OrderBookUpdate;
     
-    static events::OrderBookUpdate &parse(std::string_view event_string);
+    static const events::OrderBookUpdate &parse(std::string_view event_string);
 
 private:
     static events::OrderBookUpdate getEvent();

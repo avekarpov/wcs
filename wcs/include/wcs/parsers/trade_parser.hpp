@@ -13,7 +13,7 @@ class TradeParser
 public:
     using Event = events::Trade;
 
-    static events::Trade &parse(std::string_view event_string);
+    static const events::Trade &parse(std::string_view event_string);
 
 private:
     inline static events::Trade _event;

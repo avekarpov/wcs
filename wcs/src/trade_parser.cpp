@@ -5,7 +5,7 @@
 namespace wcs
 {
 
-events::Trade &TradeParser::parse(std::string_view event_string)
+const events::Trade &TradeParser::parse(std::string_view event_string)
 {
     _logger.trace(R"(Parse event string "{}")", event_string);
     

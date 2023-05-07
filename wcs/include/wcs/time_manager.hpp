@@ -16,12 +16,13 @@ public:
     {
         return _time;
     }
-    
-    inline static void update(Time time)
+
+    template <class Event_t>
+    inline static void process(const Event_t &event)
     {
-        assert(_time < time);
-        
-        _time = time;
+        assert(_time <= event.ts);
+
+        _time = event.ts;
     }
     
 private:

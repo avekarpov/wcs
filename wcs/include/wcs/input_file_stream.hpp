@@ -14,32 +14,44 @@ namespace wcs
 class InputFileStreamLogger
 {
 protected:
-    inline static Logger _logger { "InputFileStream" };
+    inline static Logger _logger { "InputFileStreamBase" };
     
 };
 
 // TODO: add test
-template <class Parser, bool SkipHeader>
-class InputFileStream : public InputFileStreamLogger
+template <class Parser_t, bool SkipHeader>
+class InputFileStreamBase : public InputFileStreamLogger
 {
-    using Event = typename Parser::Event;
-    
-    explicit InputFileStream(std::queue<std::filesystem::path> files_queue) :
-        _files_queue { std::move(files_queue) }
-    {}
-    
-    Event getNextEvent()
+public:
+    using Event = typename Parser_t::Event;
+
+public:
+    void setFilesQueue(const std::queue<std::filesystem::path> &files_queue)
     {
-        return Parser::parse(getNextEventString());
+        _files_queue = files_queue;
+
+        if (_files_queue.empty()) {
+            throw WCS_EXCEPTION(std::invalid_argument, "Empty file queue");
+        }
+
+        openNextFile();
+    }
+
+    const Event &getNextEvent()
+    {
+        return Parser_t::parse(getNextEventString());
+    }
+
+    bool empty() const
+    {
+        return _files_queue.empty() && (!_current_file.is_open() || _current_file.eof());
     }
     
 private:
     std::string &getNextEventString()
     {
-        do
-        {
-            if (!_current_file.is_open() || _current_file.eof())
-            {
+        do {
+            if (_current_file.eof()) {
                 openNextFile();
             }
         
@@ -54,23 +66,20 @@ private:
     
     void openNextFile()
     {
-        if (_files_queue.empty())
-        {
-            throw WCS_EXCEPTION(std::runtime_error, "End of input file queue");
+        if (_files_queue.empty()) {
+            throw WCS_EXCEPTION(std::runtime_error, "End of file queue");
         }
         
-        auto &next_file = _files_queue.front();
+        const auto &next_file = _files_queue.front();
         
         _logger.info(R"(Open next file "{}")", next_file.string());
         
-        if (_current_file.is_open())
-        {
+        if (_current_file.is_open()) {
             _current_file.close();
         }
         _current_file.open(next_file);
         
-        if constexpr (SkipHeader)
-        {
+        if constexpr (SkipHeader) {
             std::getline(_current_file, _buffer);
         }
         

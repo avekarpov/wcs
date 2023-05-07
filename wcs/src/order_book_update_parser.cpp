@@ -15,7 +15,7 @@ events::OrderBookUpdate OrderBookUpdateParser::getEvent()
     return event;
 }
 
-events::OrderBookUpdate &OrderBookUpdateParser::parse(std::string_view event_string)
+const events::OrderBookUpdate &OrderBookUpdateParser::parse(std::string_view event_string)
 {
     _logger.trace(R"(Parse event string "{}")", event_string);
     
