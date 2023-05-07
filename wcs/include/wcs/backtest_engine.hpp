@@ -95,12 +95,11 @@ public:
         _order_controller.process(event);
     }
 
-    // TODO: rename to process
-    void processAndComplete(events::OrderBookUpdate &event)
+    void process(const events::OrderBookUpdate &event)
     {
-        _order_book.processAndComplete(event);
+        _order_book.process(event);
     
-        _virtual_exchange.lock()->process(std::as_const(event));
+        _virtual_exchange.lock()->process(_order_book.update());
     }
     
     template <OrderStatus OS>

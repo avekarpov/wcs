@@ -474,12 +474,12 @@ void limitOrders(
     
     SECTION("Shift")
     {
-        SidePair<Depth> depth;
-        events::OrderBookUpdate update { .depth = depth };
-    
-        depth.get<S>().push_back(Level<S> { Price { 99 }, Amount { 10 } });
-        update = EventBuilder::build<events::OrderBookUpdate>(TimeManager::time(), depth);
-        order_book->processAndComplete(update);
+        events::OrderBookUpdate update;
+        update.ts = TimeManager::time();
+        update.depth.get<S>().push_back(Level<S> { Price { 99 }, Amount { 10 } });
+        EventBuilder::updateId(update);
+
+        order_book->process(update);
         
         order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Limit>>(
             TimeManager::time(),
@@ -514,23 +514,23 @@ TEST_CASE("OrderController")
     order_book->setConsumer(consumer);
     order_book->setOrderManager(order_controller->orderManager());
     consumer->setOrderBook(order_book);
-    
-    SidePair<Depth> depth;
-    events::OrderBookUpdate update { .depth = depth };
+
+    events::OrderBookUpdate update;
     
     // Preparing, first update
     {
         // Creating event
+        update.ts = TimeManager::time();
         {
-            auto &buy = depth.get<Side::Buy>();
+            auto &buy = update.depth.get<Side::Buy>();
             buy.push_back(Level<Side::Buy> { Price { 0 }, Amount { 0 }});
             
-            auto &sell = depth.get<Side::Sell>();
+            auto &sell = update.depth.get<Side::Sell>();
             sell.push_back(Level<Side::Sell> { Price { std::numeric_limits<double>::max() }, Amount { 0 }});
         }
-        
-        update = EventBuilder::build<events::OrderBookUpdate>(TimeManager::time(), depth);
-        order_book->processAndComplete(update);
+        EventBuilder::updateId(update);
+
+        order_book->process(update);
     }
     
     SIDE_SECTION("Market orders", marketOrders, consumer, order_controller);

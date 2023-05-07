@@ -27,7 +27,6 @@ protected:
     
 };
 
-// TODO: store local OrderBookUpdate event instead update passed event
 // TODO: make OrderManager as template arg
 template <class Consumer_t>
 class OrderBook : public OrderBookLogger
@@ -43,7 +42,7 @@ public:
         _order_manager = order_manager;
     }
 
-    void processAndComplete(events::OrderBookUpdate &event)
+    void process(const events::OrderBookUpdate &event)
     {
         _logger.gotEvent(event);
     
@@ -69,7 +68,7 @@ public:
         moveOrders(event);
         updateHistoricalDepth(event);
         updateFreezedOrders();
-        completeDepth(event);
+        createUpdate(event.ts, event.id);
     
         assert([&] ()
         {
@@ -246,8 +245,19 @@ public:
         ());
     }
     
+    const SidePair<Depth> &historicalDepth() const
+    {
+        return _historical_depth;
+    }
+
+    const events::OrderBookUpdate &update() const
+    {
+        return _order_book_update;
+    }
+    
+private:
     template <Side S>
-    Amount getVolume(const Price &price) const
+    Amount volume(const Price &price) const
     {
         const auto &depth = _historical_depth.get<S>();
         for (const auto &level : depth) {
@@ -255,20 +265,14 @@ public:
                 if (price == level.price()) {
                     return level.volume();
                 }
-    
+
                 break;
             }
         }
-        
+
         return Amount { 0 };
     }
-    
-    const SidePair<Depth> &historicalDepth() const
-    {
-        return _historical_depth;
-    }
-    
-private:
+
     template <Side S>
     void placeOrder(const OrderHandler &order)
     {
@@ -278,7 +282,7 @@ private:
             generateFreezeOrder(order.id());
         }
         else {
-            generateMoveOrderTo(order.id(), getVolume<S>(order.price()));
+            generateMoveOrderTo(order.id(), volume<S>(order.price()));
         }
     }
     
@@ -402,7 +406,7 @@ private:
                 
                 if (order->isFreezed()) {
                     generateUnfreezeOrder(order->id());
-                    generateMoveOrderTo(order->id(), std::min(getVolume<S>(order->price()), order->volumeBefore()));
+                    generateMoveOrderTo(order->id(), std::min(volume<S>(order->price()), order->volumeBefore()));
                 }
                 
                 ++order;
@@ -421,18 +425,21 @@ private:
             ++order;
         }
     }
-    
-    void completeDepth(events::OrderBookUpdate &event) const
+
+    void createUpdate(const Ts &ts, const EventId id)
     {
-        completeDepth(event.depth.get<Side::Buy>());
-        completeDepth(event.depth.get<Side::Sell>());
+        _order_book_update.ts = ts;
+        _order_book_update.id = id;
+        createUpdate<Side::Buy>();
+        createUpdate<Side::Sell>();
     }
     
     template <Side S>
-    void completeDepth(Depth<S> &depth) const
+    void createUpdate()
     {
-        assert(_historical_depth.get<S>() == depth);
+        _order_book_update.depth.get<S>() = _historical_depth.get<S>();
 
+        auto &depth = _order_book_update.depth.get<S>();
         const auto strategy_orders = _order_manager.lock()->limitOrders().get<S>();
 
         auto level = depth.begin();
@@ -494,6 +501,7 @@ private:
     std::weak_ptr<const OrderManager> _order_manager;
 
     SidePair<Depth> _historical_depth;
+    events::OrderBookUpdate _order_book_update;
 
 };
 

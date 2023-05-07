@@ -31,8 +31,7 @@ TEST_CASE("BacktestEngine")
         backtest_engine->process(events::FreezeOrder { });
         backtest_engine->process(events::UnfreezeOrder { });
         backtest_engine->process(events::MoveOrderTo { });
-        events::OrderBookUpdate order_book_update;
-        backtest_engine->processAndComplete(order_book_update);
+        backtest_engine->process(events::OrderBookUpdate { });
         backtest_engine->process(events::OrderUpdate<OrderStatus::New> { });
         backtest_engine->process(events::OrderUpdate<OrderStatus::Placed> { });
         backtest_engine->process(events::ShiftOrder { });

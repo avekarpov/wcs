@@ -35,7 +35,7 @@ public:
 
     }
 
-    void processAndComplete(events::OrderBookUpdate &event)
+    void process(events::OrderBookUpdate &event)
     {
 
     }
@@ -63,7 +63,6 @@ public:
 private:
     using ToVirtualExchange::process;
     using ToBacktestEngine::process;
-    using ToBacktestEngine::processAndComplete;
 
 };
 
