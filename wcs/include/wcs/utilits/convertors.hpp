@@ -4,6 +4,8 @@
 #include <charconv>
 #include <string>
 
+#include <fast_float/fast_float.h>
+
 namespace wcs::utilits
 {
 
@@ -13,19 +15,16 @@ T from_string_to(const std::string_view string, size_t from, size_t to)
 {
     T value;
     
-    if constexpr (std::is_floating_point_v<T>)
-    {
-        //TODO: change for fast_float::from_chars((&string.front()) + from, (&string.front()) + to, value);
-        return -1.0;
+    if constexpr (std::is_floating_point_v<T>) {
+        fast_float::from_chars((&string.front()) + from, (&string.front()) + to, value);
     }
-    else
-    {
+    else {
         std::from_chars((&string.front()) + from, (&string.front()) + to, value);
     }
     
     return value;
 }
 
-}
+} // namespace wcs::utilits
 
 #endif //WCS_CONVERTORS_HPP

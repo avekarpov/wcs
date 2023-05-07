@@ -1,5 +1,5 @@
-#ifndef WCS_ORDERBOOK_HPP
-#define WCS_ORDERBOOK_HPP
+#ifndef WCS_ORDER_BOOK_HPP
+#define WCS_ORDER_BOOK_HPP
 
 #include <iostream>
 #include <vector>
@@ -27,6 +27,8 @@ protected:
     
 };
 
+// TODO: store local OrderBookUpdate event instead update passed event
+// TODO: make OrderManager as template arg
 template <class Consumer_t>
 class OrderBook : public OrderBookLogger
 {
@@ -40,7 +42,7 @@ public:
     {
         _order_manager = order_manager;
     }
-    
+
     void processAndComplete(events::OrderBookUpdate &event)
     {
         _logger.gotEvent(event);
@@ -409,7 +411,7 @@ private:
     
         while (order != strategy_orders->end()) {
             if (order->isFreezed()) {
-                break; // all next orders has been freezed before
+                break; // all next orders has been frozen before
             }
         
             _logger.debug(R"(Order: {}, out of order book, it will be freezed)", *order);
@@ -429,14 +431,14 @@ private:
     template <Side S>
     void completeDepth(Depth<S> &depth) const
     {
-        const auto &historical_depth = _historical_depth.get<S>();
+        assert(_historical_depth.get<S>() == depth);
+
         const auto strategy_orders = _order_manager.lock()->limitOrders().get<S>();
-    
-        auto historical_level = historical_depth.begin();
+
         auto level = depth.begin();
         auto order = strategy_orders->begin();
-    
-        while (historical_level != historical_depth.end() && level != depth.end()) {
+
+        while (level != depth.end()) {
             while (order != strategy_orders->end() && utilits::sideGreater<S>(order->price(), level->price())) {
                 assert(isExecution(order->status()) && !order->isFreezed());
                 
@@ -451,22 +453,6 @@ private:
             
                     ++order;
                 }
-        
-                if (utilits::sideGreater<S>(level->price(), historical_level->price())) {
-                    ++level;
-                }
-            }
-            
-            if (utilits::sideLess<S>(level->price(), historical_level->price())) {
-                level = depth.insert(level, *historical_level);
-            }
-            else if (utilits::sideGreater<S>(level->price(), historical_level->price())) {
-                level = depth.erase(level);
-    
-                continue;
-            }
-            else {
-                level->updateVolume(historical_level->volume());
             }
     
             while (order != strategy_orders->end() && order->price() == level->price()) {
@@ -476,19 +462,12 @@ private:
     
                 ++order;
             }
-    
-            ++historical_level;
+
             ++level;
         }
         
         while (level != depth.end()) {
             level = depth.erase(level);
-        }
-        
-        while (historical_level != historical_depth.end()) {
-            depth.push_back(*historical_level);
-            
-            ++historical_level;
         }
     }
     
@@ -513,11 +492,11 @@ private:
 private:
     std::weak_ptr<Consumer_t> _consumer;
     std::weak_ptr<const OrderManager> _order_manager;
-    
+
     SidePair<Depth> _historical_depth;
 
 };
 
 } // namespace wcs
 
-#endif //WCS_ORDERBOOK_HPP
+#endif //WCS_ORDER_BOOK_HPP

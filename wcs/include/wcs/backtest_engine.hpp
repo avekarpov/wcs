@@ -19,15 +19,10 @@ class BacktestEngineBase :
 {
 private:
     using ThisClass = BacktestEngineBase<OrderController_t, OrderBook_t, MatchingEngine_t, EventManager_t>;
-    using std::enable_shared_from_this<ThisClass>::shared_from_this;
-    
     using VirtualExchange = typename EventManager_t::ToVirtualExchange;
     
 public:
-    void setEventManager(const std::shared_ptr<EventManager_t> &event_manager)
-    {
-        _virtual_exchange = event_manager;
-    }
+    using std::enable_shared_from_this<ThisClass>::shared_from_this;
     
     void init()
     {
@@ -42,7 +37,27 @@ public:
         _matching_engine.setConsumer(self);
         _matching_engine.setOrderManager(order_manager);
     }
-    
+
+    void setEventManager(const std::shared_ptr<EventManager_t> &event_manager)
+    {
+        _virtual_exchange = event_manager;
+    }
+
+    OrderController_t<ThisClass> &orderController()
+    {
+        return _order_controller;
+    }
+
+    OrderBook_t<ThisClass> &orderBook()
+    {
+        return _order_book;
+    }
+
+    MatchingEngine_t<ThisClass> &matchingEngine()
+    {
+        return _matching_engine;
+    }
+
     template <Side S, OrderType OT>
     void process(const events::PlaceOrder<S, OT> &event)
     {
@@ -79,7 +94,8 @@ public:
     {
         _order_controller.process(event);
     }
-    
+
+    // TODO: rename to process
     void processAndComplete(events::OrderBookUpdate &event)
     {
         _order_book.processAndComplete(event);

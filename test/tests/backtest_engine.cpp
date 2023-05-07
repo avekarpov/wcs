@@ -14,12 +14,13 @@ using fakes::MatchingEngine;
 using fakes::OrderBook;
 using fakes::OrderController;
 
+using BacktestEngine = BacktestEngineBase<OrderController, OrderBook, MatchingEngine, EventManager>;
+
 TEST_CASE("BacktestEngine")
 {
     SECTION("Build")
     {
-        auto backtest_engine =
-            std::make_shared<BacktestEngineBase<OrderController, OrderBook, MatchingEngine, EventManager>>();
+        auto backtest_engine = std::make_shared<BacktestEngine>();
         
         backtest_engine->init();
         
@@ -30,12 +31,13 @@ TEST_CASE("BacktestEngine")
         backtest_engine->process(events::FreezeOrder { });
         backtest_engine->process(events::UnfreezeOrder { });
         backtest_engine->process(events::MoveOrderTo { });
-        SidePair<Depth> depth;
-        events::OrderBookUpdate update { .depth = depth };
-        backtest_engine->processAndComplete(update);
+        events::OrderBookUpdate order_book_update;
+        backtest_engine->processAndComplete(order_book_update);
         backtest_engine->process(events::OrderUpdate<OrderStatus::New> { });
         backtest_engine->process(events::OrderUpdate<OrderStatus::Placed> { });
         backtest_engine->process(events::ShiftOrder { });
         backtest_engine->process(events::Trade { });
     }
+
+    // TODO: add usage test
 }
