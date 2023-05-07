@@ -1,7 +1,9 @@
 #include <catch2/catch.hpp>
 
-#include <wcs/event_manager.hpp>
 #include <wcs/backtest_engine.hpp>
+#include <wcs/event_manager/event_manager.hpp>
+#include <wcs/event_manager/to_virtual_exchange.h>
+#include <wcs/event_manager/to_backtest_engine.h>
 
 #include "../fakes/order_controller.hpp"
 #include "../fakes/order_book.hpp"
@@ -15,11 +17,17 @@ using fakes::OrderBook;
 using fakes::OrderController;
 using fakes::VirtualExchange;
 
-template <class EventManager_t>
 // TODO: change to fake
-using BacktestEngine = wcs::BacktestEngineBase<OrderController, OrderBook, MatchingEngine, EventManager_t>;
+template <class EventManager_t>
+using BacktestEngine = BacktestEngineBase<OrderController, OrderBook, MatchingEngine, EventManager_t>;
 
-using EventManager = wcs::EventManagerBase<ToVirtualExchange, VirtualExchange, ToBacktestEngine, BacktestEngine>;
+template <class EventManager_t>
+using ToVirtualExchange = ToVirtualExchangeBase<VirtualExchange, EventManager_t>;
+
+template <class EventManager_t>
+using ToBacktestEngine = ToBacktestEngineBase<BacktestEngine, EventManager_t>;
+
+using EventManager = EventManagerBase<ToVirtualExchange, ToBacktestEngine>;
 
 TEST_CASE("EventManager")
 {
@@ -27,8 +35,22 @@ TEST_CASE("EventManager")
     {
         auto event_manager = std::make_shared<EventManager>();
         auto backtest_engine = std::make_shared<BacktestEngine<EventManager>>();
-        
+        auto virtual_exchange = std::make_shared<VirtualExchange<EventManager>>();
+
         event_manager->setBacktestEngine(backtest_engine);
+        event_manager->setVirtualExchange(virtual_exchange);
         backtest_engine->setEventManager(event_manager);
+
+        backtest_engine->init();
+
+        {
+            auto to_backtest_engine = std::static_pointer_cast<EventManager::ToBacktestEngine>(event_manager);
+            to_backtest_engine->process(events::Trade { });
+            to_backtest_engine->process(events::OrderBookUpdate { });
+            to_backtest_engine->process(events::PlaceOrder<Side::Buy, OrderType::Market> { });
+            to_backtest_engine->process(events::CancelOrder { });
+        }
     }
+
+    // TODO: add usage test
 }

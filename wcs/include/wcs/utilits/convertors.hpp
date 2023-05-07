@@ -11,7 +11,7 @@ namespace wcs::utilits
 
 // TODO: add test
 template <class T>
-T from_string_to(const std::string_view string, size_t from, size_t to)
+T fromStringTo(const std::string_view string, size_t from, size_t to)
 {
     T value;
     

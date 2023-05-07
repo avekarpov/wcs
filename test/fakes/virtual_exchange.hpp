@@ -7,6 +7,12 @@ namespace wcs::fakes
 template <class EventManager_t>
 class VirtualExchange
 {
+public:
+    template <class Event_t>
+    void process(const Event_t &)
+    {
+
+    }
 
 };
 

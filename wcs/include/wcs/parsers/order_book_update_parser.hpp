@@ -1,25 +1,27 @@
 #ifndef WCS_ORDER_BOOK_UPDATE_PARSER_HPP
 #define WCS_ORDER_BOOK_UPDATE_PARSER_HPP
 
-#include "events/order_book_update.hpp"
-#include "logger.hpp"
+#include "../events/order_book_update.hpp"
+#include "../logger.hpp"
 
 namespace wcs
 {
 
-// TODO: add test and move in parsers dir
+// TODO: add test
 class OrderBookUpdateParser
 {
 public:
     using Event = events::OrderBookUpdate;
     
-    static void setDepthSize(size_t size);
-    
-    static events::OrderBookUpdate parse(std::string_view event_string);
+    static events::OrderBookUpdate &parse(std::string_view event_string);
 
 private:
-    inline static SidePair<Depth> _depth;
-    
+    static events::OrderBookUpdate getEvent();
+
+private:
+    inline static size_t DEPTH_SIZE = 20;
+    inline static auto _event = getEvent();
+
     inline static Logger _logger { "OrderBookUpdateParser" };
     
 };
