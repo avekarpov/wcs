@@ -3,14 +3,21 @@
 
 #include <memory>
 
+#include "logger.hpp"
 #include "time_manager.hpp"
 
 namespace wcs
 {
 
+class DataStreamLogger
+{
+protected:
+    inline static Logger _logger { "DataStream" };
+};
+
 // TODO: add test
 template <class TradeStream_t, class OrderBookUpdateSteam_t, class EventManager_t>
-class DataStreamBase
+class DataStreamBase : public DataStreamLogger
 {
 private:
     using BacktestEngine = typename EventManager_t::ToBacktestEngine;
@@ -72,11 +79,15 @@ public:
         if (trade.ts < order_book_update.ts) {
             TimeManager::process(trade);
 
+            _logger.trace("Update time by trade event: {}", trade);
+
             _backtest_engine.lock()->process(trade);
             _trade_stream.processNextEvent();
         }
         else {
             TimeManager::process(order_book_update);
+
+            _logger.trace("Update time by order book update event: {}", order_book_update);
 
             _backtest_engine.lock()->process(order_book_update);
             _order_book_update_stream.processNextEvent();

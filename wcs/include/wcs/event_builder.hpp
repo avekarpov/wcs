@@ -4,7 +4,7 @@
 #include <utility>
 
 #include "entities/id.hpp"
-#include "time_manager.hpp"
+#include "entities/time.hpp"
 
 namespace wcs
 {

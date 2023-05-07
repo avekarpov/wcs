@@ -51,8 +51,8 @@ TEST_CASE("OrderBook")
             //skip 190
             sell.push_back(Level<Side::Sell> { Price { 195 }, Amount { 19.5 }});
         }
-
         EventBuilder::updateId(update);
+
         order_book->process(update);
         
         const auto &buy = order_book->historicalDepth().get<Side::Buy>();
@@ -250,8 +250,8 @@ TEST_CASE("OrderBook")
                     sell.push_back(Level<Side::Sell> { Price { 170 + delta}, Amount { 17 }});
                     sell.push_back(Level<Side::Sell> { Price { 180 + delta}, Amount { 90 }});
                 }
-        
                 EventBuilder::updateId(update);
+
                 order_book->process(update);
             };
             

@@ -14,7 +14,7 @@ namespace wcs
 class InputFileStreamLogger
 {
 protected:
-    inline static Logger _logger { "InputFileStreamBase" };
+    inline static Logger _logger { "InputFileStream" };
     
 };
 

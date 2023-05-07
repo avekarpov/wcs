@@ -11,6 +11,7 @@
 #include "events/shift_order.hpp"
 #include "logger.hpp"
 #include "order_manager.hpp"
+#include "time_manager.hpp"
 #include "utilits/exception.hpp"
 #include "utilits/side_comparison.hpp"
 

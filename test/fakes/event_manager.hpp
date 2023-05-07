@@ -6,6 +6,7 @@
 namespace wcs::fakes
 {
 
+template <class EventManager_t>
 class ToVirtualExchange
 {
 public:
@@ -27,6 +28,7 @@ public:
     
 };
 
+template <class EventManager_t>
 class ToBacktestEngine
 {
 public:
@@ -53,12 +55,17 @@ public:
     
 };
 
-template <class ToVirtualExchange_t, class ToBacktestEngine_t>
-class EventManager : public ToVirtualExchange_t, public ToBacktestEngine_t
+template <template <class> class ToVirtualExchange_t, template <class> class ToBacktestEngine_t>
+class EventManager :
+    public ToVirtualExchange_t<EventManager<ToVirtualExchange_t, ToBacktestEngine_t>>,
+    public ToBacktestEngine_t<EventManager<ToVirtualExchange_t, ToBacktestEngine_t>>
 {
+private:
+    using ThisClass = EventManager<ToVirtualExchange_t, ToBacktestEngine_t>;
+
 public:
-    using ToVirtualExchange = ToVirtualExchange_t;
-    using ToBacktestEngine = ToBacktestEngine_t;
+    using ToVirtualExchange = ToVirtualExchange_t<ThisClass>;
+    using ToBacktestEngine = ToBacktestEngine_t<ThisClass>;
 
 private:
     using ToVirtualExchange::process;

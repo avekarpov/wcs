@@ -437,6 +437,7 @@ private:
     template <Side S>
     void createUpdate()
     {
+        // TODO: change copy to update every different level
         _order_book_update.depth.get<S>() = _historical_depth.get<S>();
 
         auto &depth = _order_book_update.depth.get<S>();
