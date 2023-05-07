@@ -6,35 +6,71 @@
 namespace wcs::fakes
 {
 
-class FromBacktestEngine
+template <class EventManager_t>
+class ToVirtualExchange
 {
 public:
-    template <class Event_t>
-    void process(const Event_t &event)
+    void process(const events::Trade &event)
     {
-    
+
+    }
+
+    void process(const events::OrderBookUpdate &event)
+    {
+
+    }
+
+    template<OrderStatus OS>
+    void process(const events::OrderUpdate<OS> &event)
+    {
+
     }
     
 };
 
-class FromVirtualExchange
+template <class EventManager_t>
+class ToBacktestEngine
 {
 public:
-    template <class Event_t>
-    void process(const Event_t &event)
+    void process(const events::Trade &event)
     {
-    
+
+    }
+
+    void process(events::OrderBookUpdate &event)
+    {
+
+    }
+
+    template<Side S, OrderType OT>
+    void process(const events::PlaceOrder<S, OT> &event)
+    {
+
+    }
+
+    void process(const events::CancelOrder &event)
+    {
+
     }
     
 };
 
-template <class FromBacktestEngine_t, class FromVirtualExchange_t>
-class EventManager : public FromBacktestEngine_t, public FromVirtualExchange_t
+template <template <class> class ToVirtualExchange_t, template <class> class ToBacktestEngine_t>
+class EventManager :
+    public ToVirtualExchange_t<EventManager<ToVirtualExchange_t, ToBacktestEngine_t>>,
+    public ToBacktestEngine_t<EventManager<ToVirtualExchange_t, ToBacktestEngine_t>>
 {
+private:
+    using ThisClass = EventManager<ToVirtualExchange_t, ToBacktestEngine_t>;
+
 public:
-    using FromBacktestEngine = FromBacktestEngine_t;
-    using FromVirtualExchange = FromVirtualExchange_t;
-    
+    using ToVirtualExchange = ToVirtualExchange_t<ThisClass>;
+    using ToBacktestEngine = ToBacktestEngine_t<ThisClass>;
+
+private:
+    using ToVirtualExchange::process;
+    using ToBacktestEngine::process;
+
 };
 
 } // namespace wcs::fakes

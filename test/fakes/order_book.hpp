@@ -24,7 +24,7 @@ public:
     
     }
     
-    void processAndComplete(events::OrderBookUpdate &event)
+    void process(const events::OrderBookUpdate &event)
     {
     
     }
@@ -39,6 +39,14 @@ public:
     {
     
     }
+
+    const events::OrderBookUpdate &update() const
+    {
+        return _order_book_update;
+    }
+
+private:
+    events::OrderBookUpdate _order_book_update;
 };
 
 } // namespace wcs::fakes

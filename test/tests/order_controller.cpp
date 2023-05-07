@@ -5,7 +5,6 @@
 
 #include "../spies/consumer.hpp"
 #include "../utilits/side_section.hpp"
-#include "../utilits/event_builder.hpp"
 
 using namespace wcs;
 
@@ -25,9 +24,15 @@ void marketOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderContr
         {
             consumer->clear();
     
-            order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Market>>(OrderId { 1 }, Amount { 1 }));
-            order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Market>>(OrderId { 2 }, Amount { 2 }));
-            order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Market>>(OrderId { 3 }, Amount { 3 }));
+            order_controller->process(
+                EventBuilder::build<events::PlaceOrder<S, OrderType::Market>>(
+                    TimeManager::time(), OrderId { 1 }, Amount { 1 }));
+            order_controller->process(
+                EventBuilder::build<events::PlaceOrder<S, OrderType::Market>>(
+                    TimeManager::time(), OrderId { 2 }, Amount { 2 }));
+            order_controller->process(
+                EventBuilder::build<events::PlaceOrder<S, OrderType::Market>>(
+                    TimeManager::time(), OrderId { 3 }, Amount { 3 }));
             
             const auto &order_update_events = consumer->orderUpdateEvents();
             auto order_update = order_update_events.begin();
@@ -56,9 +61,9 @@ void marketOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderContr
         {
             consumer->clear();
     
-            order_controller->process(createEvent<events::CancelOrder>(OrderId{ 1 }));
-            order_controller->process(createEvent<events::CancelOrder>(OrderId{ 2 }));
-            order_controller->process(createEvent<events::CancelOrder>(OrderId{ 3 }));
+            order_controller->process(EventBuilder::build<events::CancelOrder>(TimeManager::time(), OrderId{ 1 }));
+            order_controller->process(EventBuilder::build<events::CancelOrder>(TimeManager::time(), OrderId{ 2 }));
+            order_controller->process(EventBuilder::build<events::CancelOrder>(TimeManager::time(), OrderId{ 3 }));
             
             const auto &order_update_events = consumer->orderUpdateEvents();
             auto order_update = order_update_events.begin();
@@ -77,13 +82,16 @@ void marketOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderContr
     {
         consumer->clear();
         
-        order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Market>>(OrderId { 1 }, Amount { 100 }));
+        order_controller->process(
+            EventBuilder::build<events::PlaceOrder<S, OrderType::Market>>(
+                TimeManager::time(), OrderId { 1 }, Amount { 100 }));
         const auto &order = market_orders->front();
         
         CHECK(order.filledAmount() == Amount { 0 });
         CHECK(order.status() == OrderStatus::Placed);
         
-        order_controller->process(createEvent<events::FillOrder>(OrderId { 1 }, Amount { 10 }));
+        order_controller->process(EventBuilder::build<events::FillOrder>(
+            TimeManager::time(), OrderId { 1 }, Amount { 10 }));
     
         {
             const auto &last_order_update =
@@ -95,7 +103,8 @@ void marketOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderContr
         CHECK(order.filledAmount() == Amount { 10 });
         CHECK(order.status() == OrderStatus::Partially);
     
-        order_controller->process(createEvent<events::FillOrder>(OrderId { 1 }, Amount { 20 }));
+        order_controller->process(EventBuilder::build<events::FillOrder>(
+            TimeManager::time(), OrderId { 1 }, Amount { 20 }));
     
         {
             const auto &last_order_update =
@@ -107,7 +116,8 @@ void marketOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderContr
         CHECK(order.filledAmount() == Amount { 30 });
         CHECK(order.status() == OrderStatus::Partially);
     
-        order_controller->process(createEvent<events::FillOrder>(OrderId { 1 }, Amount { 30 }));
+        order_controller->process(EventBuilder::build<events::FillOrder>(
+            TimeManager::time(), OrderId { 1 }, Amount { 30 }));
     
         {
             const auto &last_order_update =
@@ -119,7 +129,8 @@ void marketOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderContr
         CHECK(order.filledAmount() == Amount { 60 });
         CHECK(order.status() == OrderStatus::Partially);
     
-        order_controller->process(createEvent<events::FillOrder>(OrderId { 1 }, Amount { 40 }));
+        order_controller->process(EventBuilder::build<events::FillOrder>(
+            TimeManager::time(), OrderId { 1 }, Amount { 40 }));
     
         {
             const auto &last_order_update =
@@ -161,7 +172,8 @@ void limitOrders(
             return true;
         };
         
-        order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Limit>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Limit>>(
+            TimeManager::time(),
             OrderId { 1 },
             Price { 100 },
             Amount { 1 }
@@ -175,7 +187,8 @@ void limitOrders(
     
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Limit>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Limit>>(
+            TimeManager::time(),
             OrderId { 2 },
             Price { 50 },
             Amount { 2 }
@@ -189,7 +202,8 @@ void limitOrders(
         
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Limit>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Limit>>(
+            TimeManager::time(),
             OrderId { 3 },
             Price { 150 },
             Amount { 3 }
@@ -203,7 +217,8 @@ void limitOrders(
     
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Limit>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Limit>>(
+            TimeManager::time(),
             OrderId { 4 },
             Price { 75 },
             Amount { 4 }
@@ -217,7 +232,8 @@ void limitOrders(
     
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Limit>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Limit>>(
+            TimeManager::time(),
             OrderId { 5 },
             Price { 125 },
             Amount { 5 }
@@ -231,7 +247,8 @@ void limitOrders(
         
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Limit>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Limit>>(
+            TimeManager::time(),
             OrderId { 6 },
             Price { 100 },
             Amount { 6 }
@@ -245,7 +262,8 @@ void limitOrders(
     
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Limit>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Limit>>(
+            TimeManager::time(),
             OrderId { 7 },
             Price { 50 },
             Amount { 7 }
@@ -259,7 +277,8 @@ void limitOrders(
     
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Limit>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Limit>>(
+            TimeManager::time(),
             OrderId { 8 },
             Price { 150 },
             Amount { 8 }
@@ -275,7 +294,8 @@ void limitOrders(
     
         CHECK(limit_orders->size() == 8);
     
-        order_controller->process(createEvent<events::CancelOrder>(
+        order_controller->process(EventBuilder::build<events::CancelOrder>(
+            TimeManager::time(),
             OrderId { 1 }
         ));
     
@@ -287,7 +307,8 @@ void limitOrders(
         
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::CancelOrder>(
+        order_controller->process(EventBuilder::build<events::CancelOrder>(
+            TimeManager::time(),
             OrderId { 2 }
         ));
     
@@ -299,7 +320,8 @@ void limitOrders(
         
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::CancelOrder>(
+        order_controller->process(EventBuilder::build<events::CancelOrder>(
+            TimeManager::time(),
             OrderId { 3 }
         ));
     
@@ -311,7 +333,8 @@ void limitOrders(
         
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::CancelOrder>(
+        order_controller->process(EventBuilder::build<events::CancelOrder>(
+            TimeManager::time(),
             OrderId { 4 }
         ));
     
@@ -323,7 +346,8 @@ void limitOrders(
         
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::CancelOrder>(
+        order_controller->process(EventBuilder::build<events::CancelOrder>(
+            TimeManager::time(),
             OrderId { 5 }
         ));
     
@@ -335,7 +359,8 @@ void limitOrders(
         
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::CancelOrder>(
+        order_controller->process(EventBuilder::build<events::CancelOrder>(
+            TimeManager::time(),
             OrderId { 6 }
         ));
     
@@ -347,7 +372,8 @@ void limitOrders(
         
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::CancelOrder>(
+        order_controller->process(EventBuilder::build<events::CancelOrder>(
+            TimeManager::time(),
             OrderId { 7 }
         ));
     
@@ -359,7 +385,8 @@ void limitOrders(
         
         CHECK(is_sorted_by_price(limit_orders));
     
-        order_controller->process(createEvent<events::CancelOrder>(
+        order_controller->process(EventBuilder::build<events::CancelOrder>(
+            TimeManager::time(),
             OrderId { 8 }
         ));
     
@@ -374,7 +401,8 @@ void limitOrders(
     
     SECTION("Fill order")
     {
-        order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Limit>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Limit>>(
+            TimeManager::time(),
             OrderId { 1 },
             Price { 99 },
             Amount { 100 }
@@ -384,8 +412,9 @@ void limitOrders(
         CHECK(order.filledAmount() == Amount { 0 });
         CHECK(order.status() == OrderStatus::Placed);
         
-        order_controller->process(createEvent<events::FillOrder>(
-           OrderId { 1 },
+        order_controller->process(EventBuilder::build<events::FillOrder>(
+            TimeManager::time(),
+            OrderId { 1 },
            Amount { 10 }
         ));
     
@@ -398,7 +427,8 @@ void limitOrders(
     
         CHECK(order.filledAmount() == Amount { 10 });
     
-        order_controller->process(createEvent<events::FillOrder>(
+        order_controller->process(EventBuilder::build<events::FillOrder>(
+            TimeManager::time(),
             OrderId { 1 },
             Amount { 20 }
         ));
@@ -412,7 +442,8 @@ void limitOrders(
     
         REQUIRE(limit_orders->front().filledAmount() == Amount { 30 });
     
-        order_controller->process(createEvent<events::FillOrder>(
+        order_controller->process(EventBuilder::build<events::FillOrder>(
+            TimeManager::time(),
             OrderId { 1 },
             Amount { 30 }
         ));
@@ -426,7 +457,8 @@ void limitOrders(
     
         REQUIRE(limit_orders->front().filledAmount() == Amount { 60 });
     
-        order_controller->process(createEvent<events::FillOrder>(
+        order_controller->process(EventBuilder::build<events::FillOrder>(
+            TimeManager::time(),
             OrderId { 1 },
             Amount { 40 }
         ));
@@ -442,14 +474,15 @@ void limitOrders(
     
     SECTION("Shift")
     {
-        SidePair<Depth> depth;
-        events::OrderBookUpdate update { .depth = depth };
-    
-        depth.get<S>().push_back(Level<S> { Price { 99 }, Amount { 10 } });
-        update = createEvent<events::OrderBookUpdate>(depth);
-        order_book->processAndComplete(update);
+        events::OrderBookUpdate update;
+        update.ts = TimeManager::time();
+        update.depth.get<S>().push_back(Level<S> { Price { 99 }, Amount { 10 } });
+        EventBuilder::updateId(update);
+
+        order_book->process(update);
         
-        order_controller->process(createEvent<events::PlaceOrder<S, OrderType::Limit>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<S, OrderType::Limit>>(
+            TimeManager::time(),
             OrderId { 1 },
             Price { 99 },
             Amount { 100 }
@@ -459,7 +492,8 @@ void limitOrders(
         REQUIRE(order.volumeBefore() == Amount { 10 });
         CHECK(order.status() == OrderStatus::Placed);
         
-        order_controller->process(createEvent<events::ShiftOrder>(
+        order_controller->process(EventBuilder::build<events::ShiftOrder>(
+            TimeManager::time(),
             OrderId { 1 },
             Amount { 10 }
         ));
@@ -480,23 +514,23 @@ TEST_CASE("OrderController")
     order_book->setConsumer(consumer);
     order_book->setOrderManager(order_controller->orderManager());
     consumer->setOrderBook(order_book);
-    
-    SidePair<Depth> depth;
-    events::OrderBookUpdate update { .depth = depth };
+
+    events::OrderBookUpdate update;
     
     // Preparing, first update
     {
         // Creating event
+        update.ts = TimeManager::time();
         {
-            auto &buy = depth.get<Side::Buy>();
+            auto &buy = update.depth.get<Side::Buy>();
             buy.push_back(Level<Side::Buy> { Price { 0 }, Amount { 0 }});
             
-            auto &sell = depth.get<Side::Sell>();
+            auto &sell = update.depth.get<Side::Sell>();
             sell.push_back(Level<Side::Sell> { Price { std::numeric_limits<double>::max() }, Amount { 0 }});
         }
-        
-        update = createEvent<events::OrderBookUpdate>(depth);
-        order_book->processAndComplete(update);
+        EventBuilder::updateId(update);
+
+        order_book->process(update);
     }
     
     SIDE_SECTION("Market orders", marketOrders, consumer, order_controller);

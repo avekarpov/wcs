@@ -1,11 +1,12 @@
-#ifndef WCS_ORDERBOOK_HPP
-#define WCS_ORDERBOOK_HPP
+#ifndef WCS_ORDER_BOOK_HPP
+#define WCS_ORDER_BOOK_HPP
 
-#include <vector>
 #include <iostream>
+#include <vector>
 
 #include "entities/level.hpp"
 #include "entities/side.hpp"
+#include "event_builder.hpp"
 #include "events/decrease_level.hpp"
 #include "events/freeze_order.hpp"
 #include "events/move_order_to.hpp"
@@ -13,6 +14,7 @@
 #include "events/order_update.hpp"
 #include "logger.hpp"
 #include "order_manager.hpp"
+#include "time_manager.hpp"
 #include "utilits/side_comparison.hpp"
 
 namespace wcs
@@ -25,11 +27,12 @@ protected:
     
 };
 
+// TODO: make OrderManager as template arg
 template <class Consumer_t>
 class OrderBook : public OrderBookLogger
 {
 public:
-    void setConsumer(std::shared_ptr<Consumer_t> consumer)
+    void setConsumer(const std::shared_ptr<Consumer_t> &consumer)
     {
         _consumer = consumer;
     }
@@ -38,8 +41,8 @@ public:
     {
         _order_manager = order_manager;
     }
-    
-    void processAndComplete(events::OrderBookUpdate &event)
+
+    void process(const events::OrderBookUpdate &event)
     {
         _logger.gotEvent(event);
     
@@ -65,7 +68,7 @@ public:
         moveOrders(event);
         updateHistoricalDepth(event);
         updateFreezedOrders();
-        completeDepth(event);
+        createUpdate(event.ts, event.id);
     
         assert([&] ()
         {
@@ -242,8 +245,19 @@ public:
         ());
     }
     
+    const SidePair<Depth> &historicalDepth() const
+    {
+        return _historical_depth;
+    }
+
+    const events::OrderBookUpdate &update() const
+    {
+        return _order_book_update;
+    }
+    
+private:
     template <Side S>
-    Amount getVolume(const Price &price) const
+    Amount volume(const Price &price) const
     {
         const auto &depth = _historical_depth.get<S>();
         for (const auto &level : depth) {
@@ -251,20 +265,14 @@ public:
                 if (price == level.price()) {
                     return level.volume();
                 }
-    
+
                 break;
             }
         }
-        
+
         return Amount { 0 };
     }
-    
-    const SidePair<Depth> &historicalDepth() const
-    {
-        return _historical_depth;
-    }
-    
-private:
+
     template <Side S>
     void placeOrder(const OrderHandler &order)
     {
@@ -274,7 +282,7 @@ private:
             generateFreezeOrder(order.id());
         }
         else {
-            generateMoveOrderTo(order.id(), getVolume<S>(order.price()));
+            generateMoveOrderTo(order.id(), volume<S>(order.price()));
         }
     }
     
@@ -398,7 +406,7 @@ private:
                 
                 if (order->isFreezed()) {
                     generateUnfreezeOrder(order->id());
-                    generateMoveOrderTo(order->id(), std::min(getVolume<S>(order->price()), order->volumeBefore()));
+                    generateMoveOrderTo(order->id(), std::min(volume<S>(order->price()), order->volumeBefore()));
                 }
                 
                 ++order;
@@ -407,7 +415,7 @@ private:
     
         while (order != strategy_orders->end()) {
             if (order->isFreezed()) {
-                break; // all next orders has been freezed before
+                break; // all next orders has been frozen before
             }
         
             _logger.debug(R"(Order: {}, out of order book, it will be freezed)", *order);
@@ -417,24 +425,28 @@ private:
             ++order;
         }
     }
-    
-    void completeDepth(events::OrderBookUpdate &event) const
+
+    void createUpdate(const Ts &ts, const EventId id)
     {
-        completeDepth(event.depth.get<Side::Buy>());
-        completeDepth(event.depth.get<Side::Sell>());
+        _order_book_update.ts = ts;
+        _order_book_update.id = id;
+        createUpdate<Side::Buy>();
+        createUpdate<Side::Sell>();
     }
     
     template <Side S>
-    void completeDepth(Depth<S> &depth) const
+    void createUpdate()
     {
-        const auto &historical_depth = _historical_depth.get<S>();
+        // TODO: change copy to update every different level
+        _order_book_update.depth.get<S>() = _historical_depth.get<S>();
+
+        auto &depth = _order_book_update.depth.get<S>();
         const auto strategy_orders = _order_manager.lock()->limitOrders().get<S>();
-    
-        auto historical_level = historical_depth.begin();
+
         auto level = depth.begin();
         auto order = strategy_orders->begin();
-    
-        while (historical_level != historical_depth.end() && level != depth.end()) {
+
+        while (level != depth.end()) {
             while (order != strategy_orders->end() && utilits::sideGreater<S>(order->price(), level->price())) {
                 assert(isExecution(order->status()) && !order->isFreezed());
                 
@@ -449,22 +461,6 @@ private:
             
                     ++order;
                 }
-        
-                if (utilits::sideGreater<S>(level->price(), historical_level->price())) {
-                    ++level;
-                }
-            }
-            
-            if (utilits::sideLess<S>(level->price(), historical_level->price())) {
-                level = depth.insert(level, *historical_level);
-            }
-            else if (utilits::sideGreater<S>(level->price(), historical_level->price())) {
-                level = depth.erase(level);
-    
-                continue;
-            }
-            else {
-                level->updateVolume(historical_level->volume());
             }
     
             while (order != strategy_orders->end() && order->price() == level->price()) {
@@ -474,58 +470,42 @@ private:
     
                 ++order;
             }
-    
-            ++historical_level;
+
             ++level;
         }
         
         while (level != depth.end()) {
             level = depth.erase(level);
         }
-        
-        while (historical_level != historical_depth.end()) {
-            depth.push_back(*historical_level);
-            
-            ++historical_level;
-        }
     }
     
     void generateMoveOrderTo(OrderId order_id, const Amount &volume_before) const
     {
-        _consumer.lock()->process(events::MoveOrderTo
-        {
-            Ts { 0 }, EventId { 0 }, // TODO: change for event builder
-            order_id,
-            volume_before
-        });
+        _consumer.lock()->process(
+            EventBuilder::build<events::MoveOrderTo>(TimeManager::time(), order_id, volume_before));
     }
     
     void generateFreezeOrder(OrderId order_id) const
     {
-        _consumer.lock()->process(events::FreezeOrder
-        {
-            Ts { 0 }, EventId { 0 }, // TODO: change for event builder
-            order_id
-        });
+        _consumer.lock()->process(
+            EventBuilder::build<events::FreezeOrder>(TimeManager::time(), order_id));
     }
     
     void generateUnfreezeOrder(OrderId order_id) const
     {
-        _consumer.lock()->process(events::UnfreezeOrder
-        {
-            Ts { 0 }, EventId { 0 }, // TODO: change for event builder
-            order_id
-        });
+        _consumer.lock()->process(
+            EventBuilder::build<events::UnfreezeOrder>(TimeManager::time(), order_id));
     }
     
 private:
     std::weak_ptr<Consumer_t> _consumer;
     std::weak_ptr<const OrderManager> _order_manager;
-    
+
     SidePair<Depth> _historical_depth;
+    events::OrderBookUpdate _order_book_update;
 
 };
 
 } // namespace wcs
 
-#endif //WCS_ORDERBOOK_HPP
+#endif //WCS_ORDER_BOOK_HPP

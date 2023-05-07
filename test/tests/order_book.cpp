@@ -4,7 +4,6 @@
 #include <wcs/order_controller.hpp>
 
 #include "../spies/consumer.hpp"
-#include "../utilits/event_builder.hpp"
 
 using namespace wcs;
 
@@ -22,15 +21,15 @@ TEST_CASE("OrderBook")
     order_book->setConsumer(consumer);
     order_book->setOrderManager(order_controller->orderManager());
     consumer->setOrderBook(order_book);
-    
-    SidePair<Depth> depth;
-    events::OrderBookUpdate update { .depth = depth };
+
+    events::OrderBookUpdate update;
     
     // Preparing, first update
     {
         // Creating event
+        update.ts = TimeManager::time();
         {
-            auto &buy = depth.get<Side::Buy>();
+            auto &buy = update.depth.get<Side::Buy>();
             buy.push_back(Level<Side::Buy> { Price { 80 }, Amount { 8 }});
             // skip 70
             buy.push_back(Level<Side::Buy> { Price { 60 }, Amount { 6 }});
@@ -41,7 +40,7 @@ TEST_CASE("OrderBook")
             // skip 10
             buy.push_back(Level<Side::Buy> { Price { 5 }, Amount { 0.5 }});
         
-            auto &sell = depth.get<Side::Sell>();
+            auto &sell = update.depth.get<Side::Sell>();
             sell.push_back(Level<Side::Sell> { Price { 120 }, Amount { 12 }});
             //skip 130
             sell.push_back(Level<Side::Sell> { Price { 140 }, Amount { 14 }});
@@ -52,9 +51,9 @@ TEST_CASE("OrderBook")
             //skip 190
             sell.push_back(Level<Side::Sell> { Price { 195 }, Amount { 19.5 }});
         }
-    
-        update = createEvent<events::OrderBookUpdate>(depth);
-        order_book->processAndComplete(update);
+        EventBuilder::updateId(update);
+
+        order_book->process(update);
         
         const auto &buy = order_book->historicalDepth().get<Side::Buy>();
         auto buy_it = buy.begin();
@@ -89,7 +88,8 @@ TEST_CASE("OrderBook")
     
     auto place_buy_order = [&order_controller] (OrderId id, const Price &price, const Amount &amount)
     {
-        order_controller->process(createEvent<events::PlaceOrder<Side::Buy, OrderType::Limit>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<Side::Buy, OrderType::Limit>>(
+            TimeManager::time(),
             id,
             price,
             amount
@@ -98,7 +98,8 @@ TEST_CASE("OrderBook")
     
     auto place_sell_order = [&order_controller] (OrderId id, const Price &price, const Amount &amount)
     {
-        order_controller->process(createEvent<events::PlaceOrder<Side::Sell, OrderType::Limit>>(
+        order_controller->process(EventBuilder::build<events::PlaceOrder<Side::Sell, OrderType::Limit>>(
+            TimeManager::time(),
             id,
             price,
             amount
@@ -220,11 +221,12 @@ TEST_CASE("OrderBook")
     {
         SECTION("Depths")
         {
-            auto update_order_book = [&order_book, &depth, &update] (const double &delta = 0)
+            auto update_order_book = [&order_book, &update] (const double &delta = 0)
             {
                 // Creating event
+                update.ts = TimeManager::time();
                 {
-                    auto &buy = depth.get<Side::Buy>();
+                    auto &buy = update.depth.get<Side::Buy>();
                     buy.clear();
                     buy.push_back(Level<Side::Buy> { Price { 98 + delta }, Amount { 1 }});
                     buy.push_back(Level<Side::Buy> { Price { 90 + delta }, Amount { 9 }});
@@ -236,7 +238,7 @@ TEST_CASE("OrderBook")
                     buy.push_back(Level<Side::Buy> { Price { 30 + delta}, Amount { 3 }});
                     buy.push_back(Level<Side::Buy> { Price { 20 + delta}, Amount { 10 }});
             
-                    auto &sell = depth.get<Side::Sell>();
+                    auto &sell = update.depth.get<Side::Sell>();
                     sell.clear();
                     sell.push_back(Level<Side::Sell> { Price { 102 + delta}, Amount { 1 }});
                     sell.push_back(Level<Side::Sell> { Price { 110 + delta}, Amount { 11 }});
@@ -248,9 +250,9 @@ TEST_CASE("OrderBook")
                     sell.push_back(Level<Side::Sell> { Price { 170 + delta}, Amount { 17 }});
                     sell.push_back(Level<Side::Sell> { Price { 180 + delta}, Amount { 90 }});
                 }
-        
-                update = createEvent<events::OrderBookUpdate>(depth);
-                order_book->processAndComplete(update);
+                EventBuilder::updateId(update);
+
+                order_book->process(update);
             };
             
             SECTION("Without strategy orders")
@@ -315,7 +317,7 @@ TEST_CASE("OrderBook")
             
                 SECTION("Depth")
                 {
-                    const auto buy = update.depth.get<Side::Buy>();
+                    const auto &buy = order_book->update().depth.get<Side::Buy>();
                     auto buy_it = buy.begin();
                     CHECK(*buy_it == Level<Side::Buy> { Price { 98 }, Amount { 1 }});
                     ++buy_it;
@@ -334,7 +336,7 @@ TEST_CASE("OrderBook")
                     CHECK(*buy_it == Level<Side::Buy> { Price { 20 }, Amount { 10 }});
                     CHECK(buy.size() == 8);
                 
-                    const auto sell = update.depth.get<Side::Sell>();
+                    const auto &sell = order_book->update().depth.get<Side::Sell>();
                     auto sell_it = sell.begin();
                     CHECK(*sell_it == Level<Side::Sell> { Price { 102 }, Amount { 1 }});
                     ++sell_it;
@@ -468,7 +470,7 @@ TEST_CASE("OrderBook")
             
                 SECTION("Depth")
                 {
-                    const auto buy = update.depth.get<Side::Buy>();
+                    const auto &buy = order_book->update().depth.get<Side::Buy>();
                     auto buy_it = buy.begin();
                     CHECK(*buy_it == Level<Side::Buy> { Price { 99 }, Amount { 0 + 42 + 21 }});
                     ++buy_it;
@@ -491,7 +493,7 @@ TEST_CASE("OrderBook")
                     CHECK(*buy_it == Level<Side::Buy> { Price { 20 }, Amount { 10 + 42 + 21 }});
                     CHECK(buy.size() == 10);
                 
-                    const auto sell = update.depth.get<Side::Sell>();
+                    const auto &sell = order_book->update().depth.get<Side::Sell>();
                     auto sell_it = sell.begin();
                     CHECK(*sell_it == Level<Side::Sell> { Price { 101 }, Amount { 0 + 42 + 21 }});
                     ++sell_it;
@@ -577,7 +579,7 @@ TEST_CASE("OrderBook")
             
                 SECTION("Depth")
                 {
-                    const auto buy = update.depth.get<Side::Buy>();
+                    const auto &buy = order_book->update().depth.get<Side::Buy>();
                     auto buy_it = buy.begin();
                     CHECK(*buy_it == Level<Side::Buy> { Price { 118 }, Amount { 1 }});
                     ++buy_it;
@@ -602,7 +604,7 @@ TEST_CASE("OrderBook")
                     CHECK(*buy_it == Level<Side::Buy> { Price { 40 }, Amount { 10 }});
                     CHECK(buy.size() == 11);
                 
-                    const auto sell = update.depth.get<Side::Sell>();
+                    const auto &sell = order_book->update().depth.get<Side::Sell>();
                     auto sell_it = sell.begin();
                     CHECK(*sell_it == Level<Side::Sell> { Price { 101 }, Amount { 0 + 42 + 21 }});
                     ++sell_it;
@@ -696,7 +698,7 @@ TEST_CASE("OrderBook")
     
                 SECTION("Depth")
                 {
-                    const auto buy = update.depth.get<Side::Buy>();
+                    const auto &buy = order_book->update().depth.get<Side::Buy>();
                     auto buy_it = buy.begin();
                     CHECK(*buy_it == Level<Side::Buy> { Price { 99 }, Amount { 0 + 42 + 21 }});
                     ++buy_it;
@@ -727,7 +729,7 @@ TEST_CASE("OrderBook")
                     CHECK(*buy_it == Level<Side::Buy> { Price { 0 }, Amount { 10 }});
                     CHECK(buy.size() == 14);
                     
-                    const auto sell = update.depth.get<Side::Sell>();
+                    const auto &sell = order_book->update().depth.get<Side::Sell>();
                     auto sell_it = sell.begin();
                     CHECK(*sell_it == Level<Side::Sell> { Price { 82 }, Amount { 1 }});
                     ++sell_it;
@@ -766,14 +768,15 @@ TEST_CASE("OrderBook")
                 place_sell_order(OrderId{ 4 }, Price { 110 }, Amount { 5 });
     
                 REQUIRE(consumer->freezeOrderEvents().empty());
-    
-                depth.get<Side::Buy>().push_front(Level<Side::Buy> { Price { 90 }, Amount { 100 }});
-                depth.get<Side::Sell>().push_front(Level<Side::Sell> { Price { 110 }, Amount { 100 }});
-                
+
+                update.ts = TimeManager::time();
+                update.depth.get<Side::Buy>().push_front(Level<Side::Buy> { Price { 90 }, Amount { 100 }});
+                update.depth.get<Side::Sell>().push_front(Level<Side::Sell> { Price { 110 }, Amount { 100 }});
+                EventBuilder::updateId(update);
+
                 consumer->clear();
-    
-                update = createEvent<events::OrderBookUpdate>(depth);
-                order_book->processAndComplete(update);
+
+                order_book->process(update);
                 
                 CHECK(consumer->moveOrderEvents().empty());
                 CHECK(consumer->freezeOrderEvents().empty());
@@ -788,16 +791,17 @@ TEST_CASE("OrderBook")
                 place_sell_order(OrderId{ 4 }, Price { 130 }, Amount { 5 });
     
                 REQUIRE(consumer->freezeOrderEvents().empty());
-    
-                depth.get<Side::Buy>().insert(
-                    ++depth.get<Side::Buy>().begin(), Level<Side::Buy> { Price { 70 }, Amount { 100 }});
-                depth.get<Side::Sell>().insert(
-                    ++depth.get<Side::Sell>().begin(), Level<Side::Sell> { Price { 130 }, Amount { 100 }});
+
+                update.ts = TimeManager::time();
+                update.depth.get<Side::Buy>().insert(
+                    ++update.depth.get<Side::Buy>().begin(), Level<Side::Buy> { Price { 70 }, Amount { 100 }});
+                update.depth.get<Side::Sell>().insert(
+                    ++update.depth.get<Side::Sell>().begin(), Level<Side::Sell> { Price { 130 }, Amount { 100 }});
+                EventBuilder::updateId(update);
     
                 consumer->clear();
-    
-                update = createEvent<events::OrderBookUpdate>(depth);
-                order_book->processAndComplete(update);
+
+                order_book->process(update);
     
                 CHECK(consumer->moveOrderEvents().empty());
                 CHECK(consumer->freezeOrderEvents().empty());
@@ -815,13 +819,14 @@ TEST_CASE("OrderBook")
     
                 SECTION("Increasing price level volume")
                 {
-                    depth.get<Side::Buy>().front().updateVolume(Amount { 100 });
-                    depth.get<Side::Sell>().front().updateVolume(Amount { 100 });
+                    update.ts = TimeManager::time();
+                    update.depth.get<Side::Buy>().front().updateVolume(Amount { 100 });
+                    update.depth.get<Side::Sell>().front().updateVolume(Amount { 100 });
+                    EventBuilder::updateId(update);
         
                     consumer->clear();
-        
-                    update = createEvent<events::OrderBookUpdate>(depth);
-                    order_book->processAndComplete(update);
+
+                    order_book->process(update);
         
                     CHECK(consumer->moveOrderEvents().empty());
                     CHECK(consumer->freezeOrderEvents().empty());
@@ -830,13 +835,14 @@ TEST_CASE("OrderBook")
                 SECTION("Decreasing price level volume")
                 {
                     {
-                        depth.get<Side::Buy>().front().updateVolume(Amount { 6 });
-                        depth.get<Side::Sell>().front().updateVolume(Amount { 8 });
+                        update.ts = TimeManager::time();
+                        update.depth.get<Side::Buy>().front().updateVolume(Amount { 6 });
+                        update.depth.get<Side::Sell>().front().updateVolume(Amount { 8 });
+                        EventBuilder::updateId(update);
         
                         consumer->clear();
-        
-                        update = createEvent<events::OrderBookUpdate>(depth);
-                        order_book->processAndComplete(update);
+
+                        order_book->process(update);
         
                         const auto &move_order_events = consumer->moveOrderEvents();
                         auto move = move_order_events.begin();
@@ -857,19 +863,21 @@ TEST_CASE("OrderBook")
                     }
     
                     {
-                        depth.get<Side::Buy>().front().updateVolume(Amount { 60 });
-                        depth.get<Side::Sell>().front().updateVolume(Amount { 80 });
-    
-                        update = createEvent<events::OrderBookUpdate>(depth);
-                        order_book->processAndComplete(update);
-    
-                        depth.get<Side::Buy>().front().updateVolume(Amount { 54 });
-                        depth.get<Side::Sell>().front().updateVolume(Amount { 72 });
+                        update.ts = TimeManager::time();
+                        update.depth.get<Side::Buy>().front().updateVolume(Amount { 60 });
+                        update.depth.get<Side::Sell>().front().updateVolume(Amount { 80 });
+                        EventBuilder::updateId(update);
+
+                        order_book->process(update);
+
+                        update.ts = TimeManager::time();
+                        update.depth.get<Side::Buy>().front().updateVolume(Amount { 54 });
+                        update.depth.get<Side::Sell>().front().updateVolume(Amount { 72 });
+                        EventBuilder::updateId(update);
     
                         consumer->clear();
-                        
-                        update = createEvent<events::OrderBookUpdate>(depth);
-                        order_book->processAndComplete(update);
+
+                        order_book->process(update);
         
                         const auto &move_order_events = consumer->moveOrderEvents();
                         auto move = move_order_events.begin();
@@ -911,16 +919,17 @@ TEST_CASE("OrderBook")
                     ++freeze;
                     REQUIRE(freeze->client_order_id == OrderId { 4 });
                     REQUIRE(freeze_order_events.size() == 4);
-        
-                    depth.get<Side::Buy>().insert(
-                        depth.get<Side::Buy>().end(), Level<Side::Buy> { Price { 1 }, Amount { 100 }});
-                    depth.get<Side::Sell>().insert(
-                        depth.get<Side::Sell>().end(), Level<Side::Sell> { Price { 199 }, Amount { 100 }});
+
+                    update.ts = TimeManager::time();
+                    update.depth.get<Side::Buy>().insert(
+                        update.depth.get<Side::Buy>().end(), Level<Side::Buy> { Price { 1 }, Amount { 100 }});
+                    update.depth.get<Side::Sell>().insert(
+                        update.depth.get<Side::Sell>().end(), Level<Side::Sell> { Price { 199 }, Amount { 100 }});
+                    EventBuilder::updateId(update);
     
                     consumer->clear();
-                    
-                    update = createEvent<events::OrderBookUpdate>(depth);
-                    order_book->processAndComplete(update);
+
+                    order_book->process(update);
         
                     const auto &unfreeze_order_events = consumer->unfreezeOrderEvents();
                     auto unfreeze = unfreeze_order_events.begin();
@@ -962,12 +971,13 @@ TEST_CASE("OrderBook")
                     REQUIRE(consumer->freezeOrderEvents().empty());
     
                     consumer->clear();
-    
-                    depth.get<Side::Buy>().pop_back();
-                    depth.get<Side::Sell>().pop_back();
-    
-                    update = createEvent<events::OrderBookUpdate>(depth);
-                    order_book->processAndComplete(update);
+
+                    update.ts = TimeManager::time();
+                    update.depth.get<Side::Buy>().pop_back();
+                    update.depth.get<Side::Sell>().pop_back();
+                    EventBuilder::updateId(update);
+
+                    order_book->process(update);
                     
                     const auto &freeze_order_events = consumer->freezeOrderEvents();
                     auto freeze = freeze_order_events.begin();
@@ -986,13 +996,14 @@ TEST_CASE("OrderBook")
     
                     SECTION("Must unfreeze")
                     {
-                        depth.get<Side::Buy>().insert(
-                            depth.get<Side::Buy>().end(), Level<Side::Buy> { Price { 5 }, Amount { 100 }});
-                        depth.get<Side::Sell>().insert(
-                            depth.get<Side::Sell>().end(), Level<Side::Sell> { Price { 195 }, Amount { 100 }});
-        
-                        update = createEvent<events::OrderBookUpdate>(depth);
-                        order_book->processAndComplete(update);
+                        update.ts = TimeManager::time();
+                        update.depth.get<Side::Buy>().insert(
+                            update.depth.get<Side::Buy>().end(), Level<Side::Buy> { Price { 5 }, Amount { 100 }});
+                        update.depth.get<Side::Sell>().insert(
+                            update.depth.get<Side::Sell>().end(), Level<Side::Sell> { Price { 195 }, Amount { 100 }});
+                        EventBuilder::updateId(update);
+
+                        order_book->process(update);
         
                         const auto &unfreeze_order_events = consumer->unfreezeOrderEvents();
                         auto unfreeze = unfreeze_order_events.begin();
@@ -1026,13 +1037,14 @@ TEST_CASE("OrderBook")
                     
                     SECTION("Must stay freezed")
                     {
-                        depth.get<Side::Buy>().insert(
-                            depth.get<Side::Buy>().end(), Level<Side::Buy> { Price { 10 }, Amount { 100 }});
-                        depth.get<Side::Sell>().insert(
-                            depth.get<Side::Sell>().end(), Level<Side::Sell> { Price { 190 }, Amount { 100 }});
-    
-                        update = createEvent<events::OrderBookUpdate>(depth);
-                        order_book->processAndComplete(update);
+                        update.ts = TimeManager::time();
+                        update.depth.get<Side::Buy>().insert(
+                            update.depth.get<Side::Buy>().end(), Level<Side::Buy> { Price { 10 }, Amount { 100 }});
+                        update.depth.get<Side::Sell>().insert(
+                            update.depth.get<Side::Sell>().end(), Level<Side::Sell> { Price { 190 }, Amount { 100 }});
+                        EventBuilder::updateId(update);
+
+                        order_book->process(update);
     
                         CHECK(consumer->freezeOrderEvents().empty());
                         CHECK(consumer->unfreezeOrderEvents().empty());
@@ -1048,7 +1060,8 @@ TEST_CASE("OrderBook")
         consumer->clear();
     
         {
-            order_book->process(createEvent<events::DecreaseLevel<Side::Buy>>(
+            order_book->process(EventBuilder::build<events::DecreaseLevel<Side::Buy>>(
+                TimeManager::time(),
                 Price { 60 },
                 Amount { 4 }
             ));
@@ -1058,7 +1071,8 @@ TEST_CASE("OrderBook")
             REQUIRE(level->price() == Price { 60 });
             CHECK(level->volume() == Amount { 2 });
     
-            order_book->process(createEvent<events::DecreaseLevel<Side::Buy>>(
+            order_book->process(EventBuilder::build<events::DecreaseLevel<Side::Buy>>(
+                TimeManager::time(),
                 Price { 60 },
                 Amount { 2 }
             ));
@@ -1069,7 +1083,8 @@ TEST_CASE("OrderBook")
         }
     
         {
-            order_book->process(createEvent<events::DecreaseLevel<Side::Sell>>(
+            order_book->process(EventBuilder::build<events::DecreaseLevel<Side::Sell>>(
+                TimeManager::time(),
                 Price { 140 },
                 Amount { 4 }
             ));
@@ -1079,7 +1094,8 @@ TEST_CASE("OrderBook")
             REQUIRE(level->price() == Price { 140 });
             CHECK(level->volume() == Amount { 10 });
         
-            order_book->process(createEvent<events::DecreaseLevel<Side::Sell>>(
+            order_book->process(EventBuilder::build<events::DecreaseLevel<Side::Sell>>(
+                TimeManager::time(),
                 Price { 140 },
                 Amount { 10 }
             ));

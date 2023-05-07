@@ -13,18 +13,7 @@ struct OrderBookUpdate : public Event
 {
     static constexpr std::string_view NAME = "OrderBookUpdate";
     
-    OrderBookUpdate &operator=(const OrderBookUpdate &other)
-    {
-        if (this != &other) {
-            ts = other.ts;
-            id = other.id;
-            depth = other.depth;
-        }
-
-        return *this;
-    }
-    
-    SidePair<Depth> &depth;
+    SidePair<Depth> depth;
 };
 
 } // namespace wcs::events
