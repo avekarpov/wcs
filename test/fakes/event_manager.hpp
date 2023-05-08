@@ -1,6 +1,8 @@
 #ifndef WCS_FAKES_EVENT_MANAGER_HPP
 #define WCS_FAKES_EVENT_MANAGER_HPP
 
+#include <variant>
+
 #include <wcs/events/events.hpp>
 
 namespace wcs::fakes
@@ -9,6 +11,17 @@ namespace wcs::fakes
 template <class EventManager_t>
 class ToVirtualExchange
 {
+public:
+    using EventVariant =
+        std::variant<
+            events::Trade,
+            events::OrderBookUpdate,
+            events::OrderUpdate<OrderStatus::Placed>,
+            events::OrderUpdate<OrderStatus::Partially>,
+            events::OrderUpdate<OrderStatus::Filled>,
+            events::OrderUpdate<OrderStatus::Canceled>,
+            events::OrderUpdate<OrderStatus::Rejected>>;
+
 public:
     void process(const events::Trade &event)
     {
@@ -31,6 +44,15 @@ public:
 template <class EventManager_t>
 class ToBacktestEngine
 {
+public:
+    using EventVariant =
+        std::variant<
+            events::PlaceOrder<Side::Buy, OrderType::Limit>,
+            events::PlaceOrder<Side::Sell, OrderType::Limit>,
+            events::PlaceOrder<Side::Buy, OrderType::Market>,
+            events::PlaceOrder<Side::Sell, OrderType::Market>,
+            events::CancelOrder>;
+
 public:
     void process(const events::Trade &event)
     {

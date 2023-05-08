@@ -28,7 +28,9 @@ const events::Trade &TradeParser::parse(std::string_view event_string)
     from = pos + 2;
     _event.maker_side = event_string[from] == 'b' ? Side::Buy : Side::Sell;
     
-    return EventBuilder::updateId(_event);
+    EventBuilder::updateId(_event);
+
+    return _event;
 }
 
 } // namespace wcs

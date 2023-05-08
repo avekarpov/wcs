@@ -37,9 +37,9 @@ public:
         openNextFile();
     }
 
-    const Event &getNextEvent()
+    const Event &nextEvent()
     {
-        return Parser_t::parse(getNextEventString());
+        return Parser_t::parse(nextEventString());
     }
 
     bool empty() const
@@ -48,7 +48,7 @@ public:
     }
     
 private:
-    std::string &getNextEventString()
+    std::string &nextEventString()
     {
         do {
             if (_current_file.eof()) {
