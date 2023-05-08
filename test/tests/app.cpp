@@ -14,8 +14,7 @@
 
 #include "../fakes/strategy.hpp"
 
-template <class EventManager_t>
-using VirtualExchange = wcs::VirtualExchange<EventManager_t>;
+using wcs::VirtualExchange;
 
 template <class EventManager_t>
 using BacktestEngine =

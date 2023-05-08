@@ -63,6 +63,9 @@ TEST_CASE("EventManager")
         }
         {
             auto to_virtual_exchange = std::static_pointer_cast<EventManager::ToVirtualExchange>(event_manager);
+            to_virtual_exchange->process(events::Trade { });
+            to_virtual_exchange->process(events::OrderBookUpdate { });
+            to_virtual_exchange->process(events::OrderUpdate<wcs::OrderStatus::Placed> { });
         }
     }
 

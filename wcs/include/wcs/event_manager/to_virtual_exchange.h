@@ -1,7 +1,6 @@
 #ifndef WCS_TO_VIRTUAL_EXCHANGE_H
 #define WCS_TO_VIRTUAL_EXCHANGE_H
 
-#include <tuple>
 #include <memory>
 
 #include "../events/trade.hpp"
