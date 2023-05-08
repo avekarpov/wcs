@@ -51,7 +51,9 @@ const events::OrderBookUpdate &OrderBookUpdateParser::parse(std::string_view eve
         level = Level<Side::Sell> { price, volume };
     }
     
-    return EventBuilder::updateId<events::OrderBookUpdate>(_event);
+    EventBuilder::updateId<events::OrderBookUpdate>(_event);
+
+    return _event;
 }
 
 } // namespace wcs

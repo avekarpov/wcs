@@ -1,6 +1,7 @@
 #ifndef WCS_TO_BACKTEST_ENGINE_H
 #define WCS_TO_BACKTEST_ENGINE_H
 
+#include <variant>
 #include <memory>
 
 #include "../events/cancel_order.hpp"
@@ -11,38 +12,37 @@
 namespace wcs
 {
 
-template <template <class> class BacktestEngine_t, class EventManager_t>
-class ToBacktestEngineBase
+template <class EventManager_t>
+class ToBacktestEngine
 {
 public:
-    void setBacktestEngine(const std::shared_ptr<BacktestEngine_t<EventManager_t>> &backtest_engine)
-    {
-        _backtest_engine = backtest_engine;
-    }
+    using EventVariant =
+        std::variant<
+            events::PlaceOrder<Side::Buy, OrderType::Limit>,
+            events::PlaceOrder<Side::Sell, OrderType::Limit>,
+            events::PlaceOrder<Side::Buy, OrderType::Market>,
+            events::PlaceOrder<Side::Sell, OrderType::Market>,
+            events::CancelOrder>;
 
-    void process(const events::Trade &event)
-    {
-        _backtest_engine.lock()->process(event);
-    }
-
-    void process(const events::OrderBookUpdate &event)
-    {
-        _backtest_engine.lock()->process(event);
-    }
-
+public:
     template<Side S, OrderType OT>
     void process(const events::PlaceOrder<S, OT> &event)
     {
-        _backtest_engine.lock()->process(event);
+        processToBacktestEngine(event);
     }
 
     void process(const events::CancelOrder &event)
     {
-        _backtest_engine.lock()->process(event);
+        processToBacktestEngine(event);
     }
 
 private:
-    std::weak_ptr<BacktestEngine_t<EventManager_t>> _backtest_engine;
+    template <class Event_t>
+    void processToBacktestEngine(const Event_t &event)
+    {
+        static_cast<EventManager_t &>(*this).processToBacktestEngine(event);
+    }
+
 };
 
 } // namespace wcs

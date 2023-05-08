@@ -25,11 +25,9 @@ public:
     }
 
     template <class Event_t>
-    inline static Event_t &updateId(Event_t &event)
+    inline static void updateId(Event_t &event)
     {
         event.id = _next_event_id++;
-
-        return event;
     }
 
 private:

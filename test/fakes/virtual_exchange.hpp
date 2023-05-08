@@ -1,5 +1,5 @@
-#ifndef WCS_VIRTUAL_EXCHANGE_HPP
-#define WCS_VIRTUAL_EXCHANGE_HPP
+#ifndef WCS_FAKES_VIRTUAL_EXCHANGE_HPP
+#define WCS_FAKES_VIRTUAL_EXCHANGE_HPP
 
 namespace wcs::fakes
 {
@@ -18,4 +18,4 @@ public:
 
 } // namespace wcs::fakes
 
-#endif //WCS_VIRTUAL_EXCHANGE_HPP
+#endif //WCS_FAKES_VIRTUAL_EXCHANGE_HPP
