@@ -105,6 +105,7 @@ public:
         return _order_book_update_stream;
     }
 
+    // TODO: process in event id order
     void processNextEvent()
     {
         const std::array<Ts, 4> events_ts =
