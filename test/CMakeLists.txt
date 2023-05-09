@@ -7,15 +7,16 @@ file(GLOB_RECURSE CPPS "*.cpp")
 
 add_executable(test ${CPPS})
 
-target_include_directories(
-    test PRIVATE
-    libs
-)
+set(CATCH2_INCLUDE libs/catch2/include)
 
 target_include_directories(
+    test PRIVATE
+    ${CATCH2_INCLUDE}
+
     test PUBLIC
     ${WCS_INCLUDE}
 )
+
 target_link_libraries(
     test PUBLIC
     ${WCS_LIB}
