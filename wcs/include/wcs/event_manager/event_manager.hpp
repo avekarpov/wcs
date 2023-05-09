@@ -6,6 +6,7 @@
 
 #include "../events/events.hpp"
 #include "../time_manager.hpp"
+#include "../utilits/debug.hpp"
 
 namespace wcs
 {
@@ -57,6 +58,14 @@ public:
     friend ToBacktestEngine;
 
 public:
+    EventManagerBase()
+    :
+#ifdef WCS_DEBUG_BUILD
+        _last_processed_event_ts { 0 },
+#endif
+        _delay { 0 }
+    {}
+
     void init()
     {
         if (empty()) {
@@ -96,6 +105,7 @@ public:
         return _order_book_update_stream;
     }
 
+    // TODO: process in event id order
     void processNextEvent()
     {
         const std::array<Ts, 4> events_ts =
@@ -104,10 +114,10 @@ public:
             _next_order_book_update->ts,
             !_queue_to_virtual_exchange.empty()
                 ? ts(_queue_to_virtual_exchange.front())
-                : std::numeric_limits<Ts>::max(),
+                : Ts::max(),
             !_queue_to_backtest_engine.empty()
                 ? ts(_queue_to_backtest_engine.front())
-                : std::numeric_limits<Ts>::max()
+                : Ts::max()
         };
 
         size_t min = 0;
@@ -137,6 +147,11 @@ private:
 
     void processTradeToBacktestEngine()
     {
+#ifdef WCS_DEBUG_BUILD
+        assert(_last_processed_event_ts <= _next_trade->ts);
+        _last_processed_event_ts = _next_trade->ts;
+#endif
+
         TimeManager::process(*_next_trade);
         _backtest_engine.lock()->process(*_next_trade);
 
@@ -145,6 +160,11 @@ private:
 
     void processOrderBookUpdateToBacktestEngine()
     {
+#ifdef WCS_DEBUG_BUILD
+        assert(_last_processed_event_ts <= _next_order_book_update->ts);
+        _last_processed_event_ts = _next_order_book_update->ts;
+#endif
+
         TimeManager::process(*_next_order_book_update);
         _backtest_engine.lock()->process(*_next_order_book_update);
 
@@ -155,8 +175,15 @@ private:
     {
         std::visit([&] (const auto &event)
         {
+#ifdef WCS_DEBUG_BUILD
+            assert(_last_processed_event_ts <= event.ts);
+            _last_processed_event_ts = event.ts;
+#endif
+
             TimeManager::process(event);
             _virtual_exchange.lock()->process(event);
+
+
         },
         _queue_to_virtual_exchange.front());
 
@@ -167,6 +194,11 @@ private:
     {
         std::visit([&] (const auto &event)
         {
+#ifdef WCS_DEBUG_BUILD
+            assert(_last_processed_event_ts <= event.ts);
+            _last_processed_event_ts = event.ts;
+#endif
+
             TimeManager::process(event);
             _backtest_engine.lock()->process(event);
         },
@@ -200,6 +232,10 @@ private:
     }
 
 private:
+#ifdef WCS_DEBUG_BUILD
+    Time _last_processed_event_ts;
+#endif
+
     Time _delay;
 
     TradeStream_t _trade_stream;

@@ -16,9 +16,12 @@
 
 using wcs::VirtualExchange;
 
+template <class Consumer_t>
+using MatchingEngine = wcs::MatchingEngine<Consumer_t, true>;
+
 template <class EventManager_t>
 using BacktestEngine =
-    wcs::BacktestEngineBase<wcs::OrderController, wcs::OrderBook, wcs::MatchingEngine, EventManager_t>;
+    wcs::BacktestEngineBase<wcs::OrderController, wcs::OrderBook, MatchingEngine, EventManager_t>;
 
 using TradeStream = wcs::InputFileStreamBase<wcs::TradeParser, true>;
 using OrderBookUpdateStream = wcs::InputFileStreamBase<wcs::OrderBookUpdateParser, true>;
@@ -49,6 +52,7 @@ TEST_CASE("App")
         virtual_exchange->setEventManager(event_manager);
         backtest_engine->setEventManager(event_manager);
 
+        virtual_exchange->setStrategy(strategy);
         strategy->setExchange(virtual_exchange);
 
         CHECK_THROWS(event_manager->tradeStream().setFilesQueue({ }));
