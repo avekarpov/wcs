@@ -14,7 +14,7 @@ template <Side S, Side Opposite = opposite(S)>
 void marketOrders(
     std::shared_ptr<Consumer> consumer,
     std::shared_ptr<OrderController<Consumer>> order_controller,
-    std::shared_ptr<MatchingEngine<Consumer>> matching_engine
+    std::shared_ptr<MatchingEngine<Consumer, true>> matching_engine
 ) {
     const auto place_order = [&order_controller] (OrderId id, const Amount &amount)
     {
@@ -78,7 +78,7 @@ template <Side S>
 void limitOrders(
     std::shared_ptr<Consumer> consumer,
     std::shared_ptr<OrderController<Consumer>> order_controller,
-    std::shared_ptr<MatchingEngine<Consumer>> matching_engine
+    std::shared_ptr<MatchingEngine<Consumer, true>> matching_engine
 ) {
     const auto place_order = [&order_controller] (OrderId id, const Price &price, const Amount &amount)
     {
@@ -211,7 +211,7 @@ TEST_CASE("MatchingEngine")
     order_controller->setConsumer(consumer);
     consumer->setOrderController(order_controller);
     
-    auto matching_engine = std::make_shared<MatchingEngine<Consumer>>();
+    auto matching_engine = std::make_shared<MatchingEngine<Consumer, true>>();
     matching_engine->setConsumer(consumer);
     matching_engine->setOrderManager(order_controller->orderManager());
     consumer->setMatchingEngine(matching_engine);

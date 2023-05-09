@@ -20,7 +20,7 @@ protected:
     inline static Logger _logger { "MatchingEngine" };
 };
 
-template <class Consumer_t>
+template <class Consumer_t, bool DecreaseLevel>
 class MatchingEngine : public MatchingEngineLogger
 {
 public:
@@ -123,15 +123,17 @@ private:
             
             ++order;
         }
-        
-        const auto decrease_level_volume = spend_volume_for_shift + rest_volume_for_fill;
-        if (decrease_level_volume) {
-            generateDecreaseLevel<S>(price, decrease_level_volume);
-            
-            // TODO: move this logic in order book maybe
-            while (order != limit_orders->end() && price == order->price()) {
-                generateShiftOrder(order->id(), decrease_level_volume);
-                ++order;
+
+        if constexpr (DecreaseLevel) {
+            const auto decrease_level_volume = spend_volume_for_shift + rest_volume_for_fill;
+            if (decrease_level_volume) {
+                generateDecreaseLevel<S>(price, decrease_level_volume);
+
+                // TODO: move this logic in order book maybe
+                while (order != limit_orders->end() && price == order->price()) {
+                    generateShiftOrder(order->id(), decrease_level_volume);
+                    ++order;
+                }
             }
         }
         

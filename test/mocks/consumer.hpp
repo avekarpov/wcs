@@ -24,7 +24,7 @@ public:
         _order_book = order_book;
     }
     
-    void setMatchingEngine(std::shared_ptr<MatchingEngine<C>> matching_engine)
+    void setMatchingEngine(std::shared_ptr<MatchingEngine<C, true>> matching_engine)
     {
         _matching_engine = matching_engine;
     }
@@ -96,7 +96,7 @@ private:
 private:
     std::weak_ptr<OrderController<C>> _order_controller;
     std::weak_ptr<OrderBook<C>> _order_book;
-    std::weak_ptr<MatchingEngine<C>> _matching_engine;
+    std::weak_ptr<MatchingEngine<C, true>> _matching_engine;
 
 };
 
