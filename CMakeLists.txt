@@ -3,7 +3,8 @@ project(wcs)
 
 set(CMAKE_CXX_STANDARD 20)
 
-set(WCS_BUILD_TESTS OFF CACHE BOOL "Build library test")
+set(WCS_BUILD_TESTS OFF CACHE BOOL "Build library tests")
+
 set(WCS_ADDRESS_SANITIZER OFF CACHE BOOL "Build with address sanitizer")
 
 # Build with address sanitizer
@@ -20,5 +21,5 @@ set(WCS_LIB wcs)
 
 # Build library tests
 if(WCS_BUILD_TESTS)
-    add_subdirectory(test)
+    add_subdirectory(tests)
 endif()
