@@ -60,9 +60,9 @@ public:
 public:
     EventManagerBase()
     :
-        #ifdef WCS_DEBUG_BUILD
+#ifdef WCS_DEBUG_BUILD
         _last_processed_event_ts { 0 },
-        #endif
+#endif
         _delay { 0 }
     {}
 
