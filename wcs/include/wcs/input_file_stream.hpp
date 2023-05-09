@@ -26,6 +26,7 @@ public:
     using Event = typename Parser_t::Event;
 
 public:
+    /// @warning input files must not have empty lines
     void setFilesQueue(const std::queue<std::filesystem::path> &files_queue)
     {
         _files_queue = files_queue;
@@ -50,15 +51,14 @@ public:
 private:
     std::string &nextEventString()
     {
-        do {
-            if (_current_file.eof()) {
-                openNextFile();
-            }
-        
-            std::getline(_current_file, _buffer);
+        if (_current_file.eof()) {
+            openNextFile();
         }
-        while (_buffer.empty());
-    
+
+        std::getline(_current_file, _buffer);
+
+        assert(!_buffer.empty());
+
         _logger.trace(R"(Read next event string "{}")", _buffer);
     
         return _buffer;

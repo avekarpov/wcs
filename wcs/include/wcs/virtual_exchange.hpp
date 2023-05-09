@@ -24,9 +24,9 @@ class Strategy;
 class Exchange
 {
 public:
-    virtual void placeLimitOrder(Side side, const OrderId &id, const Price &price, const Amount &amount) = 0;
+    virtual void placeLimitOrder(const OrderId &id, Side side, const Price &price, const Amount &amount) = 0;
 
-    virtual void placeMarketOrder(Side side, const OrderId &id, const Amount &amount) = 0;
+    virtual void placeMarketOrder(const OrderId &id, Side side, const Amount &amount) = 0;
 
     virtual void cancelOrder(const OrderId &id) = 0;
 
@@ -57,8 +57,15 @@ public:
         _strategy = strategy;
     }
 
-    void placeLimitOrder(Side side, const OrderId &id, const Price &price, const Amount &amount) override
+    void placeLimitOrder(const OrderId &id, Side side, const Price &price, const Amount &amount) override
     {
+        _logger.info(
+            R"("Strategy place limit order with params: {"id": {}, "side": "{}", "price": {}, "amount": {}})",
+            id,
+            wcs::toString(side),
+            price,
+            amount);
+
         if (side == Side::Buy) {
             generatePlaceOrder<Side::Buy, OrderType::Limit>(id, price, amount);
         }
@@ -67,8 +74,14 @@ public:
         }
     }
 
-    void placeMarketOrder(Side side, const OrderId &id, const Amount &amount) override
+    void placeMarketOrder(const OrderId &id, Side side, const Amount &amount) override
     {
+        _logger.info(
+            R"("Strategy place market order with params: {"id": {}, "side": "{}", "amount": {}})",
+            id,
+            wcs::toString(side),
+            amount);
+
         if (side == Side::Buy) {
             generatePlaceOrder<Side::Buy, OrderType::Market>(id, amount);
         }
@@ -79,16 +92,22 @@ public:
 
     void cancelOrder(const OrderId &id) override
     {
+        _logger.info(R"(Strategy cancel order with params: {"id": {}})", id);
+
         generateCancelOrder(id);
     }
 
     void process(const events::Trade &event)
     {
+        _logger.gotEvent(event);
+
         _strategy.lock()->on(event);
     }
 
     void process(const events::OrderBookUpdate &event)
     {
+        _logger.gotEvent(event);
+
         _strategy.lock()->on(event);
     }
 
@@ -96,6 +115,8 @@ public:
     void process(const events::OrderUpdate<OS> &event)
     {
         static_assert(OS != OrderStatus::New);
+
+        _logger.gotEvent(event);
 
         _strategy.lock()->on(event);
     }
