@@ -259,11 +259,15 @@ public:
     
     bool isFreezed() const
     {
+        assert(_type == OrderType::Limit);
+
         return _is_freezed;
     }
     
     void freeze()
     {
+        assert(_type == OrderType::Limit);
+
         assert(!_is_freezed);
         
         _is_freezed = true;
@@ -271,6 +275,8 @@ public:
     
     void unfreeze()
     {
+        assert(_type == OrderType::Limit);
+
         assert(_is_freezed);
         
         _is_freezed = false;
@@ -328,15 +334,14 @@ struct fmt::formatter<wcs::OrderHandler>
             return fmt::format_to(
                 ctx.out(),
                 R"({{"id": {}, "type": "{}", "side": "{}", "amount": {}, )"
-                R"("status": "{}", "wa_price": {}, "filled_amount": {}, "is_freezed": {}}})",
+                R"("status": "{}", "wa_price": {}, "filled_amount": {}}})",
                 order.id(),
                 wcs::toString(order.type()),
                 wcs::toString(order.side()),
                 order.amount(),
                 wcs::toString(order.status()),
                 order.waPrice(),
-                order.filledAmount(),
-                order.isFreezed()
+                order.filledAmount()
             );
         }
     }

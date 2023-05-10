@@ -72,11 +72,6 @@ public:
         return *this;
     }
     
-    inline double operator*(const Amount &other) const
-    {
-        return _value * other._value;
-    }
-    
     inline double operator/(const Amount &other) const
     {
         return _value / other._value;
@@ -92,16 +87,16 @@ public:
         return Amount { _value / by };
     }
     
-    inline Amount &operator*=(const Amount &other)
+    inline Amount &operator*=(double by)
     {
-        _value *= other._value;
+        _value *= by;
         
         return *this;
     }
     
-    inline Amount &operator/=(const Amount &other)
+    inline Amount &operator/=(double by)
     {
-        _value /= other._value;
+        _value /= by;
         
         return *this;
     }
@@ -113,7 +108,7 @@ public:
     
     explicit operator bool() const
     {
-        return static_cast<bool>(_value);
+        return *this != Amount { 0 };
     }
     
 private:

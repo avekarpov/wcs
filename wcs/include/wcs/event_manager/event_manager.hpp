@@ -132,7 +132,7 @@ public:
             case 0: processTradeToBacktestEngine(); break;
             case 1: processOrderBookUpdateToBacktestEngine(); break;
             case 2: processToVirtualExchangeFromQueue(); break;
-            case 4: processToBacktestEngineFromQueue(); break;
+            case 3: processToBacktestEngineFromQueue(); break;
         }
     }
 
