@@ -8,10 +8,14 @@ file(GLOB_RECURSE CPPS "*.cpp")
 add_executable(app ${CPPS})
 
 target_include_directories(
-    app PUBLIC
-    ${WCS_INCLUDE}
+    app PRIVATE
+    ${ARGUMENTUM_INCLUDE}
+    ${SIMDJSON_INCLUDE}
 )
+
 target_link_libraries(
     app PUBLIC
+    ${ARGUMENTUM_LIB}
+    ${SIMDJSON_LIB}
     ${WCS_LIB}
 )

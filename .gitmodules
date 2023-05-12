@@ -4,3 +4,9 @@
 [submodule "wcs/libs/fast_float"]
 	path = wcs/libs/fast_float
 	url = git@github.com:fastfloat/fast_float.git
+[submodule "examples/libs/argumentum"]
+	path = examples/libs/argumentum
+	url = git@github.com:mmahnic/argumentum.git
+[submodule "examples/libs/simdjson"]
+	path = examples/libs/simdjson
+	url = git@github.com:simdjson/simdjson.git

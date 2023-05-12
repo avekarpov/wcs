@@ -3,18 +3,17 @@ project(tests)
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(WCS_TESTS_DIR ${WCS_DIR}/tests)
+
 file(GLOB_RECURSE CPPS "*.cpp")
 
 add_executable(tests ${CPPS})
 
-set(CATCH2_INCLUDE libs/catch2/include)
+set(CATCH2_INCLUDE ${WCS_TESTS_DIR}/libs/catch2/include)
 
 target_include_directories(
     tests PRIVATE
     ${CATCH2_INCLUDE}
-
-    tests PUBLIC
-    ${WCS_INCLUDE}
 )
 
 target_link_libraries(

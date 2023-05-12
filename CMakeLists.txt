@@ -3,6 +3,8 @@ project(wcs)
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(WCS_DIR ${PROJECT_SOURCE_DIR})
+
 set(WCS_BUILD_TESTS OFF CACHE BOOL "Build library tests")
 set(WCS_BUILD_EXAMPLES OFF CACHE BOOL "Build library examples")
 set(WCS_ADDRESS_SANITIZER OFF CACHE BOOL "Build with address sanitizer")
@@ -16,7 +18,7 @@ endif()
 
 # Add library
 add_subdirectory(wcs)
-set(WCS_INCLUDE wcs/include)
+set(WCS_INCLUDE ${WCS_DIR}/wcs/include)
 set(WCS_LIB wcs)
 
 # Build library tests
