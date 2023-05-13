@@ -20,6 +20,7 @@ protected:
     inline static Logger _logger { "MatchingEngine" };
 };
 
+// TODO: add test for fill price
 template <class Consumer_t, bool DecreaseLevel>
 class MatchingEngine : public MatchingEngineLogger
 {
@@ -65,7 +66,7 @@ private:
             const auto fill_for = std::min(rest_volume, order.restAmount());
             
             _orders_fill_volume.emplace(order.id(), fill_for);
-            _logger.debug(R"(Order: {}, matched for {} volume)", order, fill_for);
+            _logger.debug(R"(Order: {}, matched for {} volume by price {})", order, fill_for, price);
             
             rest_volume -= fill_for;
             
@@ -75,7 +76,7 @@ private:
         }
         
         for (const auto &order_fill_volume : _orders_fill_volume) {
-            generateFillOrder(order_fill_volume.first, order_fill_volume.second);
+            generateFillOrder(order_fill_volume.first, price, order_fill_volume.second);
         }
     }
     
@@ -138,7 +139,7 @@ private:
         }
         
         for (const auto &order_fill_volume : _orders_fill_volume) {
-            generateFillOrder(order_fill_volume.first, order_fill_volume.second);
+            generateFillOrder(order_fill_volume.first, price, order_fill_volume.second);
         }
     }
     
@@ -155,10 +156,10 @@ private:
             EventBuilder::build<events::MoveOrderTo>(TimeManager::time(), order_id, volume_before));
     }
     
-    void generateFillOrder(OrderId order_id, const Amount &amount)
+    void generateFillOrder(OrderId order_id, const Price &price, const Amount &amount)
     {
         _consumer.lock()->process(
-            EventBuilder::build<events::FillOrder>(TimeManager::time(), order_id, amount));
+            EventBuilder::build<events::FillOrder>(TimeManager::time(), order_id, price, amount));
     }
     
     template <Side S>

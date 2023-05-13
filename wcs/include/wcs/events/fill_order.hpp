@@ -4,6 +4,7 @@
 #include <spdlog/fmt/fmt.h>
 
 #include "../entities/amount.hpp"
+#include "../entities/price.hpp"
 #include "../entities/id.hpp"
 #include "../entities/side.hpp"
 #include "../utilits/exception.hpp"
@@ -17,7 +18,8 @@ struct FillOrder : public Event
     static constexpr std::string_view NAME = "FillOrder";
     
     OrderId client_order_id;
-    
+
+    Price price;
     Amount amount;
 };
 
@@ -44,8 +46,9 @@ struct fmt::formatter<wcs::events::FillOrder>
     {
         return fmt::format_to(
             ctx.out(),
-            R"({{"event": "{}", "ts": {}, "id": {}, "client_order_id": {}, "amount": {}}})",
-            wcs::events::FillOrder::NAME, event.ts.count(), event.id, event.client_order_id, event.amount);
+            R"({{"event": "{}", "ts": {}, "id": {}, "client_order_id": {}, )"
+            R"("price": {}, "amount": {}}})",
+            wcs::events::FillOrder::NAME, event.ts.count(), event.id, event.client_order_id, event.price, event.amount);
     }
 };
 

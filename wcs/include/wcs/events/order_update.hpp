@@ -20,6 +20,7 @@ struct OrderUpdate : public Event
 template <>
 struct OrderUpdate<OrderStatus::Partially> : public OrderUpdate<OrderStatus::New>
 {
+    Price wa_price;
     Amount amount;
 };
 
