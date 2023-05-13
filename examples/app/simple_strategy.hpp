@@ -20,6 +20,8 @@ private:
 
         // wcs::Price wa_price;
         wcs::Amount filled_amount;
+
+        bool send;
     };
 
 public:
@@ -28,6 +30,7 @@ public:
         _price_changed_window { price_change_window },
         _price_changed_coef { price_changed_coef },
         _next_order_id { 1 },
+        _order_state { .send = false },
         _position { 0 }
     {
 
@@ -43,36 +46,38 @@ public:
         _logger.gotEvent(event);
 
         const auto ticker = createTicker(event);
-        _middle_prices_by_ts.emplace_front(middlePrice(ticker), event.ts);
+        const auto middle_price = middlePrice(ticker);
+        _middle_prices_by_ts.emplace_front(middle_price, event.ts);
 
         if (_middle_prices_by_ts.size() > 2) {
             while (_middle_prices_by_ts.back().second < _middle_prices_by_ts.front().second - _price_changed_window) {
                 _middle_prices_by_ts.pop_back();
             }
 
-            double price_changed { 0 }, absolut_price_change { 0 };
+            double price_changed { 0 };
             auto it = _middle_prices_by_ts.cbegin();
             auto prev_it = it++;
             while (it != _middle_prices_by_ts.end()) {
-                const auto price_dif = priceDif(it->first, prev_it->first);
-                price_changed += price_dif;
-                absolut_price_change += std::fabs(price_dif);
+                price_changed += priceDif(it->first, prev_it->first);;
 
                 prev_it = it++;
             }
 
-            _logger.debug(R"(Price change: {}, absolut price change: {})", price_changed, absolut_price_change);
 
-            if (std::fabs(price_changed) / absolut_price_change >= _price_changed_coef) {
-                if (price_changed > 0) {
-                    _logger.info(R"(Place buy order)");
+            if (!_order_state.send) {
+               _logger.debug(R"(Price change: {}, middle price {})", price_changed, middle_price);
 
-                    placeMarketOrder<wcs::Side::Buy>(ticker.get<wcs::Side::Buy>().volume() / 100);
-                } else {
-                    _logger.info(R"(Place sell order)");
+               if (std::fabs(price_changed) / static_cast<double>(middle_price) >= _price_changed_coef) {
+                   if (price_changed > 0) {
+                       _logger.info(R"(Place buy order)");
 
-                    placeMarketOrder<wcs::Side::Buy>(ticker.get<wcs::Side::Sell>().volume() / 100);
-                }
+                       placeMarketOrder<wcs::Side::Buy>(ticker.get<wcs::Side::Buy>().volume() / 100);
+                   } else {
+                       _logger.info(R"(Place sell order)");
+
+                       placeMarketOrder<wcs::Side::Sell>(ticker.get<wcs::Side::Sell>().volume() / 100);
+                   }
+               }
             }
         }
     }
@@ -112,6 +117,8 @@ public:
 
         _logger.info("Order: {} filled", _order_state.filled_amount);
         _logger.info("Position: {}", _position);
+
+        _order_state.send = false;
     }
 
     void on(const wcs::events::OrderUpdate<wcs::OrderStatus::Canceled> &event) override
@@ -121,6 +128,8 @@ public:
         assert(_order_state.id == event.client_order_id);
 
         _order_state.status = wcs::OrderStatus::Canceled;
+
+        _order_state.send = false;
     }
 
     void on(const wcs::events::OrderUpdate<wcs::OrderStatus::Rejected> &event) override
@@ -130,6 +139,8 @@ public:
         assert(_order_state.id == event.client_order_id);
 
         _order_state.status = wcs::OrderStatus::Rejected;
+
+        _order_state.send = false;
     }
 
 private:
@@ -147,6 +158,8 @@ private:
         _order_state.filled_amount = wcs::Amount { 0 };
 
         _exchange.lock()->placeMarketOrder(_order_state.id, _order_state.side, _order_state.amount);
+
+        _order_state.send = true;
     }
 
     static Ticker createTicker(const wcs::events::OrderBookUpdate &event)

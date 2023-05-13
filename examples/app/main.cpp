@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
         delay
     };
 
-    auto strategy = std::make_shared<SimpleStrategy>(wcs::Seconds { 10 }, 0.42);
+    auto strategy = std::make_shared<SimpleStrategy>(wcs::Seconds { 10 }, 0.005);
 
     App app { config };
     app.setStrategy(strategy);
