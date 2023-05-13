@@ -92,7 +92,7 @@ public:
     
         order.fill(event.price, event.amount);
         
-        if (!order.restAmount()) {
+        if (order.restAmount() == Amount { 0 }) {
             order.updateStatus(OrderStatus::Filled);
             _logger.debug(R"(Order: {}, filled)", order);
             

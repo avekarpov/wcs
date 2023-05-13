@@ -111,7 +111,7 @@ public:
                 }
                 
                 auto order = strategy_orders->begin();
-                if (!order->restAmount()) {
+                if (order->restAmount() == Amount { 0 }) {
                     return false;
                 }
                 ++order;
@@ -220,7 +220,7 @@ public:
             
             level->decreaseVolume(event.volume);
             
-            if (!level->volume()) {
+            if (level->volume() == Amount { 0 }) {
                 depth.erase(level);
             }
         }
@@ -318,7 +318,7 @@ private:
                 break;
             }
             
-            if (order->volumeBefore()) {
+            if (order->volumeBefore() != Amount { 0 }) {
                 while (utilits::sideGreater<S>(level_update->price(), order->price())) {
                     ++level_update;
                 }
@@ -329,7 +329,7 @@ private:
                 if (level_update->volume() < level->volume()) {
                     
                     // TODO: make two as argument
-                    const auto decrease_by = (1.0 + level_update->volume() / level->volume()) / 2.0;
+                    const auto decrease_by = (1.0 + (level_update->volume() / level->volume()).getAsDouble()) / 2.0;
                     auto new_volume_before = order->volumeBefore() * decrease_by;
                     
                     if (new_volume_before > level_update->volume()) {

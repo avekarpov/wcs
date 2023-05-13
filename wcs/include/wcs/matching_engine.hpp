@@ -70,7 +70,7 @@ private:
             
             rest_volume -= fill_for;
             
-            if (!rest_volume) {
+            if (rest_volume == Amount { 0 }) {
                 break;
             }
         }
@@ -105,12 +105,12 @@ private:
         auto rest_volume_for_fill = volume;
         Amount spend_volume_for_shift { 0 };
         while (order != limit_orders->end() && price == order->price() && order->volumeBefore() < volume) {
-            if (!rest_volume_for_fill) {
+            if (rest_volume_for_fill == Amount { 0 }) {
                 break;
             }
             
             // spend rest volume for shift order
-            if (order->volumeBefore()) {
+            if (order->volumeBefore() != Amount { 0 }) {
                 rest_volume_for_fill -= order->volumeBefore();
                 spend_volume_for_shift += order->volumeBefore();
                 generateMoveOrderTo(order->id(), Amount { 0 });
@@ -127,7 +127,7 @@ private:
 
         if constexpr (DecreaseLevel) {
             const auto decrease_level_volume = spend_volume_for_shift + rest_volume_for_fill;
-            if (decrease_level_volume) {
+            if (decrease_level_volume != Amount { 0 }) {
                 generateDecreaseLevel<S>(price, decrease_level_volume);
 
                 // TODO: move this logic in order book maybe

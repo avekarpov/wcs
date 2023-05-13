@@ -502,7 +502,7 @@ void limitOrders(
             Amount { 10 }
         ));
         
-        CHECK(!order.volumeBefore());
+        CHECK(order.volumeBefore() == Amount { 0 });
     }
 }
 

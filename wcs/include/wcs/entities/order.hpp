@@ -157,7 +157,7 @@ public:
         _status { OrderStatus::New },
         _wa_price { 0 },
         _filled_amount { 0 },
-        _volume_before { std::numeric_limits<double>::max() },
+        _volume_before { 1'000'000'000 },
         _is_freezed { false }
     {
     
@@ -251,7 +251,7 @@ public:
         assert(!_is_freezed);
         assert(isExecution(_status) || _status == OrderStatus::New);
         
-        assert(volume);
+        assert(volume != Amount { 0 });
         assert(_volume_before >= volume);
         
         _volume_before -= volume;

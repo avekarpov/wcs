@@ -8,10 +8,15 @@ add_subdirectory(libs/fast_float)
 set(FAST_FLOAT_INCLUDE libs/fast_float/include)
 set(FAST_FLOAT_LIB fast_float)
 
+set(BUILD_TESTING OFF)
+add_subdirectory(libs/decimal)
+set(DECIMAL_INCLUDE libs/decimal/include)
+
 target_include_directories(
     wcs PUBLIC
     ${SPDLOG_INCLUDE}
     ${FAST_FLOAT_INCLUDE}
+    ${DECIMAL_INCLUDE}
     include
 )
 

@@ -2,6 +2,7 @@
 #define WCS_AMOUNT_HPP
 
 #include <spdlog/fmt/fmt.h>
+#include <decimal.h>
 
 #include "../utilits/exception.hpp"
 #include "side.hpp"
@@ -9,114 +10,117 @@
 namespace wcs
 {
 
-class Amount
-{
-public:
-    Amount() = default;
-    
-    explicit Amount(double value) : _value { value } { }
-    
-    Amount(const Amount &amount) = default;
-    
-    inline bool operator==(const Amount &other) const
-    {
-        return std::fabs(_value - other._value) <= EPS;
-    }
-    
-    inline bool operator!=(const Amount &other) const
-    {
-        return std::fabs(_value - other._value) > EPS;
-    }
-    
-    inline bool operator<(const Amount &other) const
-    {
-        return _value + EPS < other._value;
-    }
-    
-    inline bool operator>(const Amount &other) const
-    {
-        return _value - EPS > other._value;
-    }
-    
-    inline bool operator<=(const Amount &other) const
-    {
-        return !operator>(other);
-    }
-    
-    inline bool operator>=(const Amount &other) const
-    {
-        return !operator<(other);
-    }
+// TODO: temporary solution need to rewrite Amount class to fix double sum error
+using Amount = dec::decimal<9>;
 
-    inline Amount operator+(const Amount &other) const
-    {
-        return Amount { _value + other._value };
-    }
-    
-    inline Amount operator-(const Amount &other) const
-    {
-        return Amount { _value - other._value };
-    }
-    
-    inline Amount &operator+=(const Amount &other)
-    {
-        _value += other._value;
-        
-        return *this;
-    }
-    
-    inline Amount &operator-=(const Amount &other)
-    {
-        _value -= other._value;
-    
-        return *this;
-    }
-    
-    inline double operator/(const Amount &other) const
-    {
-        return _value / other._value;
-    }
-    
-    inline Amount operator*(double by) const
-    {
-        return Amount { _value * by };
-    }
-    
-    inline Amount operator/(double by) const
-    {
-        return Amount { _value / by };
-    }
-    
-    inline Amount &operator*=(double by)
-    {
-        _value *= by;
-        
-        return *this;
-    }
-    
-    inline Amount &operator/=(double by)
-    {
-        _value /= by;
-        
-        return *this;
-    }
-    
-    explicit operator double() const
-    {
-        return _value;
-    }
-    
-    explicit operator bool() const
-    {
-        return *this != Amount { 0 };
-    }
-    
-private:
-    static constexpr auto EPS = std::numeric_limits<double>::epsilon();
-    
-    double _value;
-
-};
+// class Amount
+// {
+// public:
+//     Amount() = default;
+//
+//     explicit Amount(double value) : _value { value } { }
+//
+//     Amount(const Amount &amount) = default;
+//
+//     inline bool operator==(const Amount &other) const
+//     {
+//         return std::fabs(_value - other._value) <= EPS;
+//     }
+//
+//     inline bool operator!=(const Amount &other) const
+//     {
+//         return std::fabs(_value - other._value) > EPS;
+//     }
+//
+//     inline bool operator<(const Amount &other) const
+//     {
+//         return _value + EPS < other._value;
+//     }
+//
+//     inline bool operator>(const Amount &other) const
+//     {
+//         return _value - EPS > other._value;
+//     }
+//
+//     inline bool operator<=(const Amount &other) const
+//     {
+//         return !operator>(other);
+//     }
+//
+//     inline bool operator>=(const Amount &other) const
+//     {
+//         return !operator<(other);
+//     }
+//
+//     inline Amount operator+(const Amount &other) const
+//     {
+//         return Amount { _value + other._value };
+//     }
+//
+//     inline Amount operator-(const Amount &other) const
+//     {
+//         return Amount { _value - other._value };
+//     }
+//
+//     inline Amount &operator+=(const Amount &other)
+//     {
+//         _value += other._value;
+//
+//         return *this;
+//     }
+//
+//     inline Amount &operator-=(const Amount &other)
+//     {
+//         _value -= other._value;
+//
+//         return *this;
+//     }
+//
+//     inline double operator/(const Amount &other) const
+//     {
+//         return _value / other._value;
+//     }
+//
+//     inline Amount operator*(double by) const
+//     {
+//         return Amount { _value * by };
+//     }
+//
+//     inline Amount operator/(double by) const
+//     {
+//         return Amount { _value / by };
+//     }
+//
+//     inline Amount &operator*=(double by)
+//     {
+//         _value *= by;
+//
+//         return *this;
+//     }
+//
+//     inline Amount &operator/=(double by)
+//     {
+//         _value /= by;
+//
+//         return *this;
+//     }
+//
+//     explicit operator double() const
+//     {
+//         return _value;
+//     }
+//
+//     explicit operator bool() const
+//     {
+//         return *this != Amount { 0 };
+//     }
+//
+// private:
+//     static constexpr auto EPS = std::numeric_limits<double>::epsilon();
+//
+//     double _value;
+//
+// };
 
 } // namespace wcs
 
@@ -138,7 +142,7 @@ struct fmt::formatter<wcs::Amount>
     auto format(const wcs::Amount &amount, FormatContext& ctx) const -> decltype(ctx.out())
     {
         return fmt::format_to(
-            ctx.out(), R"({})", static_cast<double>(amount));
+            ctx.out(), R"({})", amount.getAsDouble());
     }
 };
 

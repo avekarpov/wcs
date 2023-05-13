@@ -10,3 +10,6 @@
 [submodule "examples/libs/simdjson"]
 	path = examples/libs/simdjson
 	url = git@github.com:simdjson/simdjson.git
+[submodule "wcs/libs/decimal"]
+	path = wcs/libs/decimal
+	url = git@github.com:vpiotr/decimal_for_cpp.git
