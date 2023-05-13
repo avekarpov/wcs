@@ -155,6 +155,7 @@ public:
         Order { std::forward<Args>(args)... },
         _id { id },
         _status { OrderStatus::New },
+        _wa_price { 0 },
         _filled_amount { 0 },
         _volume_before { std::numeric_limits<double>::max() },
         _is_freezed { false }
@@ -200,15 +201,27 @@ public:
     {
         return _amount - _filled_amount;
     }
-    
-    void fill(const Amount &amount)
+
+    const Price &waPrice() const
+    {
+        return _wa_price;
+    }
+
+    void fill(const Price &price, const Amount &amount)
     {
         assert(!_is_freezed);
         assert(isExecution(_status));
         
         assert(amount > Amount { 0 });
         assert(_filled_amount + amount <= _amount);
-        
+
+        // TODO: add test
+        _wa_price = Price {(
+            static_cast<double>(_wa_price) * static_cast<double>(_filled_amount) +
+            static_cast<double>(price) * static_cast<double>(amount)) /
+            static_cast<double>(_filled_amount + amount)
+        };
+
         _filled_amount += amount;
     }
     
@@ -267,6 +280,7 @@ private:
     const OrderId _id;
     
     OrderStatus _status;
+    Price _wa_price;
     Amount _filled_amount;
     Amount _volume_before; // only historical volume before
     
@@ -297,13 +311,14 @@ struct fmt::formatter<wcs::OrderHandler>
             return fmt::format_to(
                 ctx.out(),
                 R"({{"id": {}, "type": "{}", "side": "{}", "price": {}, "amount": {}, )"
-                R"("status": "{}", "filled_amount": {}, "volume_before": {}, "is_freezed": {}}})",
+                R"("status": "{}", "wa_price": {}, "filled_amount": {}, "volume_before": {}, "is_freezed": {}}})",
                 order.id(),
                 wcs::toString(order.type()),
                 wcs::toString(order.side()),
                 order.price(),
                 order.amount(),
                 wcs::toString(order.status()),
+                order.waPrice(),
                 order.filledAmount(),
                 order.volumeBefore(),
                 order.isFreezed()
@@ -313,12 +328,13 @@ struct fmt::formatter<wcs::OrderHandler>
             return fmt::format_to(
                 ctx.out(),
                 R"({{"id": {}, "type": "{}", "side": "{}", "amount": {}, )"
-                R"("status": "{}", "filled_amount": {}, "is_freezed": {}}})",
+                R"("status": "{}", "wa_price": {}, "filled_amount": {}, "is_freezed": {}}})",
                 order.id(),
                 wcs::toString(order.type()),
                 wcs::toString(order.side()),
                 order.amount(),
                 wcs::toString(order.status()),
+                order.waPrice(),
                 order.filledAmount(),
                 order.isFreezed()
             );

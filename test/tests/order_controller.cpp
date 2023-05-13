@@ -91,7 +91,7 @@ void marketOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderContr
         CHECK(order.status() == OrderStatus::Placed);
         
         order_controller->process(EventBuilder::build<events::FillOrder>(
-            TimeManager::time(), OrderId { 1 }, Amount { 10 }));
+            TimeManager::time(), OrderId { 1 }, Price { 10 }, Amount { 10 }));
     
         {
             const auto &last_order_update =
@@ -104,7 +104,7 @@ void marketOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderContr
         CHECK(order.status() == OrderStatus::Partially);
     
         order_controller->process(EventBuilder::build<events::FillOrder>(
-            TimeManager::time(), OrderId { 1 }, Amount { 20 }));
+            TimeManager::time(), OrderId { 1 }, Price { 10 }, Amount { 20 }));
     
         {
             const auto &last_order_update =
@@ -117,7 +117,7 @@ void marketOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderContr
         CHECK(order.status() == OrderStatus::Partially);
     
         order_controller->process(EventBuilder::build<events::FillOrder>(
-            TimeManager::time(), OrderId { 1 }, Amount { 30 }));
+            TimeManager::time(), OrderId { 1 }, Price { 10 }, Amount { 30 }));
     
         {
             const auto &last_order_update =
@@ -130,7 +130,7 @@ void marketOrders(std::shared_ptr<Consumer> consumer, std::shared_ptr<OrderContr
         CHECK(order.status() == OrderStatus::Partially);
     
         order_controller->process(EventBuilder::build<events::FillOrder>(
-            TimeManager::time(), OrderId { 1 }, Amount { 40 }));
+            TimeManager::time(), OrderId { 1 }, Price { 10 }, Amount { 40 }));
     
         {
             const auto &last_order_update =
@@ -415,7 +415,8 @@ void limitOrders(
         order_controller->process(EventBuilder::build<events::FillOrder>(
             TimeManager::time(),
             OrderId { 1 },
-           Amount { 10 }
+            Price { 10 },
+            Amount { 10 }
         ));
     
         {
@@ -430,6 +431,7 @@ void limitOrders(
         order_controller->process(EventBuilder::build<events::FillOrder>(
             TimeManager::time(),
             OrderId { 1 },
+            Price { 10 },
             Amount { 20 }
         ));
     
@@ -445,6 +447,7 @@ void limitOrders(
         order_controller->process(EventBuilder::build<events::FillOrder>(
             TimeManager::time(),
             OrderId { 1 },
+            Price { 10 },
             Amount { 30 }
         ));
     
@@ -460,6 +463,7 @@ void limitOrders(
         order_controller->process(EventBuilder::build<events::FillOrder>(
             TimeManager::time(),
             OrderId { 1 },
+            Price { 10 },
             Amount { 40 }
         ));
     

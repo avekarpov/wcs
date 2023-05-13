@@ -90,13 +90,13 @@ public:
         
         auto &order = _order_manager->get(event.client_order_id);
     
-        order.fill(event.amount);
+        order.fill(event.price, event.amount);
         
         if (!order.restAmount()) {
             order.updateStatus(OrderStatus::Filled);
             _logger.debug(R"(Order: {}, filled)", order);
             
-            generateOrderUpdate<OrderStatus::Filled>(event.client_order_id, order.filledAmount());
+            generateOrderUpdate<OrderStatus::Filled>(event.client_order_id, order.waPrice(), order.filledAmount());
     
             _order_manager->remove(event.client_order_id);
         }
@@ -104,7 +104,7 @@ public:
             order.updateStatus(OrderStatus::Partially);
             _logger.debug(R"(Order: {}, partially filled)", order);
             
-            generateOrderUpdate<OrderStatus::Partially>(event.client_order_id, order.filledAmount());
+            generateOrderUpdate<OrderStatus::Partially>(event.client_order_id, order.waPrice(), order.filledAmount());
         }
     }
     
