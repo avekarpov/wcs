@@ -20,5 +20,5 @@ set(WCS_LIB wcs)
 
 # Build library tests
 if(WCS_BUILD_TESTS)
-    add_subdirectory(test)
+    add_subdirectory(tests)
 endif()
