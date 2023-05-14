@@ -60,7 +60,7 @@ public:
     void placeLimitOrder(const OrderId &id, Side side, const Price &price, const Amount &amount) override
     {
         _logger.info(
-            R"("Strategy place limit order with params: {"id": {}, "side": "{}", "price": {}, "amount": {}})",
+            R"(Strategy place limit order with params: {{"id": {}, "side": "{}", "price": {}, "amount": {}}})",
             id,
             wcs::toString(side),
             price,
@@ -77,7 +77,7 @@ public:
     void placeMarketOrder(const OrderId &id, Side side, const Amount &amount) override
     {
         _logger.info(
-            R"("Strategy place market order with params: {"id": {}, "side": "{}", "amount": {}})",
+            R"(Strategy place market order with params: {{"id": {}, "side": "{}", "amount": {}}})",
             id,
             wcs::toString(side),
             amount);
@@ -92,7 +92,7 @@ public:
 
     void cancelOrder(const OrderId &id) override
     {
-        _logger.info(R"(Strategy cancel order with params: {"id": {}})", id);
+        _logger.info(R"(Strategy cancel order with params: {{"id": {}}})", id);
 
         generateCancelOrder(id);
     }

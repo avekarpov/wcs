@@ -76,27 +76,32 @@ public:
         
         return *this;
     }
-    
-    inline Price operator*(const Price &other) const
+
+    inline double operator/(const Price &other) const
     {
-        return Price { _value * other._value };
+        return _value / other._value;
+    }
+
+    inline Price operator*(double by) const
+    {
+        return Price { _value * by };
     }
     
-    inline Price operator/(const Price &other) const
+    inline Price operator/(double by) const
     {
-        return Price { _value / other._value };
+        return Price { _value / by };
     }
     
-    inline Price &operator*=(const Price &other)
+    inline Price &operator*=(double by)
     {
-        _value *= other._value;
+        _value *= by;
         
         return *this;
     }
     
-    inline Price &operator/=(const Price &other)
+    inline Price &operator/=(double by)
     {
-        _value /= other._value;
+        _value /= by;
         
         return *this;
     }
