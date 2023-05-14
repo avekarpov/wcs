@@ -18,10 +18,16 @@ private:
 
         wcs::OrderStatus status;
 
-        // wcs::Price wa_price;
+         wcs::Price wa_price;
         wcs::Amount filled_amount;
 
         bool send;
+    };
+
+    struct Position
+    {
+        wcs::Price wa_price;
+        wcs::Amount amount;
     };
 
 public:
@@ -31,7 +37,7 @@ public:
         _price_changed_coef { price_changed_coef },
         _next_order_id { 1 },
         _order_state { .send = false },
-        _position { 0 }
+        _position { wcs::Price { 0 }, wcs::Amount { 0 }}
     {
 
     }
@@ -65,7 +71,7 @@ public:
 
 
             if (!_order_state.send) {
-               _logger.debug(R"(Price change: {}, middle price {})", price_changed, middle_price);
+               _logger.trace(R"(Price change: {}, middle price {})", price_changed, middle_price);
 
                if (std::fabs(price_changed) / static_cast<double>(middle_price) >= _price_changed_coef) {
                    if (price_changed > 0) {
@@ -110,13 +116,21 @@ public:
 
         _order_state.status = wcs::OrderStatus::Canceled;
 
+        _order_state.wa_price = event.wa_price;
         _order_state.filled_amount = event.amount;
-        _position += _order_state.side == wcs::Side::Buy
-            ? _order_state.filled_amount
-            : _order_state.filled_amount * -1.0;
 
+        const auto sign = _order_state.side == wcs::Side::Buy ? 1 : -1;
+
+        _position.wa_price = wcs::Price {(
+            static_cast<double>(_position.wa_price) * _position.amount.getAsDouble() +
+            static_cast<double>(_order_state.wa_price) * _order_state.amount.getAsDouble() * sign) /
+            (_position.amount.getAsDouble() + _order_state.amount.getAsDouble() * sign)
+        };
+        _position.amount += _order_state.filled_amount * sign;
+
+        _logger.info("Time: {}", wcs::TimeManager::time().count());
         _logger.info("Order: {} filled", _order_state.filled_amount);
-        _logger.info("Position: {}", _position);
+        _logger.info("Position: wa_price: {}, amount: {}", _position.wa_price, _position.amount);
 
         _order_state.send = false;
     }
@@ -154,7 +168,7 @@ private:
         _order_state.amount = amount;
 
         _order_state.status = wcs::OrderStatus::New;
-        // _order_state.wa_price = wcs::Price { 0 };
+        _order_state.wa_price = wcs::Price { 0 };
         _order_state.filled_amount = wcs::Amount { 0 };
 
         _exchange.lock()->placeMarketOrder(_order_state.id, _order_state.side, _order_state.amount);
@@ -195,7 +209,7 @@ private:
 
     wcs::OrderId _next_order_id;
     MarketOrderState _order_state;
-    wcs::Amount _position;
+    Position _position;
 
     wcs::Logger _logger { "SimpleStrategy" };
 };

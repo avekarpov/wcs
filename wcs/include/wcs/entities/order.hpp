@@ -217,9 +217,9 @@ public:
 
         // TODO: add test
         _wa_price = Price {(
-            static_cast<double>(_wa_price) * static_cast<double>(_filled_amount) +
-            static_cast<double>(price) * static_cast<double>(amount)) /
-            static_cast<double>(_filled_amount + amount)
+            static_cast<double>(_wa_price) * _filled_amount.getAsDouble() +
+            static_cast<double>(price) * amount.getAsDouble()) /
+            (_filled_amount + amount).getAsDouble()
         };
 
         _filled_amount += amount;
